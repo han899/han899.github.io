@@ -985,17 +985,20 @@ Banner Style
 */
 
 .main-banner {
+  background-image: url("../images/backgroud_6.jpg");
   background-repeat: no-repeat;
   background-position: center center;
-  background-size: cover;
-  padding: 226px 0px 120px 0px;
+  background-size: 1920px 1080px;
+  padding: 226px 0px 0px 0px;
   position: relative;
   overflow: hidden;
+  opacity:.2; 
+
 }
 
 .main-banner:after {
   content: '';
-  background-image: url(../images/slider-left-dec.jpg);
+  /*background-image: url(../images/slider-left-dec.jpg);*/
   background-repeat: no-repeat;
   position: absolute;
   left: 0;
@@ -1007,7 +1010,7 @@ Banner Style
 
 .main-banner:before {
   content: '';
-  background-image: url(../images/slider-right-dec.jpg);
+  /*background-image: url(../images/slider-right-dec.jpg);*/
   background-repeat: no-repeat;
   position: absolute;
   right: 0;
@@ -1025,7 +1028,7 @@ Banner Style
   text-transform: capitalize;
   font-size: 20px;
   font-weight: 700;
-  color: #fa65b1;
+  color: #FFFFFF;
   margin-bottom: 15px;
   text-transform: uppercase;
 }
@@ -1035,7 +1038,7 @@ Banner Style
   position: relative;
   font-weight: 700;
   font-size: 50px;
-  color: #2a2a2a;
+  color: #FFFFFF;
   margin-bottom: 20px;
 }
 
@@ -1063,14 +1066,27 @@ About Style
 */
 
 #about {
+  background-image: url(../images/services-left-dec.jpg),url(../images/services-right-dec.jpg);
+  background-repeat: no-repeat,no-repeat;
   padding-top: 130px;
 }
 
 .about-left-image img {
+  margin-top: 30px;
   margin-right: 45px;
 }
 
+.about-right-image img {
+  margin-top: 30px;
+  margin-left: 45px;
+}
+
 .about-right-content p {
+  margin-top: 30px;
+  margin-bottom: 45px;
+}
+
+.about-left-content p {
   margin-top: 30px;
   margin-bottom: 45px;
 }
