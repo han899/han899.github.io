@@ -1147,7 +1147,7 @@ About Style
 }
 
 .first-skill-item .progress .progress-bar {
-  border-color: #fa65b1;
+  border-color: #000000;
 }
 
 .second-skill-item .progress .progress-bar {
@@ -1197,7 +1197,7 @@ About Style
 .progress .progress-value span {
   font-size: 18px;
   text-transform: none;
-  color: #afafaf;
+  color: #000000;
   font-weight: 300;
 }
 
