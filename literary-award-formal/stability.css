@@ -1,0 +1,6 @@
+/* 避免舊版單一評分入口在新版兩輪制導覽列短暫閃現 */
+[data-nav="judging"]{display:none!important}
+
+/* 降低導覽列在權限頁切換時的視覺跳動 */
+.nav,.mobile-nav{contain:layout style}
+.nav button,.mobile-nav button{backface-visibility:hidden}
