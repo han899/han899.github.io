@@ -1,7 +1,7 @@
 'use strict';
 (function(){
- const U='https://ppdrsoltvqiqnbnlimbb.supabase.co',K='sb_publishable_Ev2C5000djbQq4wLDUKh9A_oF3H3WBd',V='20260910i',app=document.getElementById('app');let sb;
- const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const U='https://ppdrsoltvqiqnbnlimbb.supabase.co',K='sb_publishable_Ev2C5000djbQq4wLDUKh9A_oF3H3WBd',V='20260910j',app=document.getElementById('app');let sb;
+ const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));
  const invite=()=>new URLSearchParams(location.search).get('invite')||'';
  const html=b=>app.innerHTML=`<main class="login"><div class="login-card">${b}</div></main>`;
  const showLoading=()=>app.innerHTML='<div class="loader-screen" role="status" aria-live="polite"><div class="loader-center"><div class="loader-book" aria-hidden="true">📖</div><div class="loader-dots" aria-hidden="true"><i></i><i></i><i></i></div><span class="sr-only">載入中</span></div></div>';
