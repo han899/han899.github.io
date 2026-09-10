@@ -36,7 +36,7 @@ function judgeReview(assignments){
 }
 function adminTail(){return `<div class="rf4-nav-section"><div class="rf4-nav-section-title">結果與系統</div>${btn('awards','得獎名單')}${btn('settings','專案設定')}${btn('audit','操作紀錄')}</div>`}
 function render(role,assignments){
- const root=ensureRoot();
+ const root=ensureRoot();root.hidden=false;
  let html='<div class="rf4-global-nav-inner">';
  html+=generalItems(role);
  if(role==='judge')html+=judgeReview(assignments);
@@ -60,11 +60,11 @@ async function sync(){
  const role=R.s.role||'';
  const assignments=role==='judge'?await R.assignments():[];
  const sig=JSON.stringify({pid:R.s.project.id,role,assignments:assignments.map(a=>[a.group_name,!!a.round1_enabled,!!a.round2_enabled])});
- if(sig!==signature){signature=sig;render(role,assignments)}else{ensureRoot();markActive()}
+ if(sig!==signature){signature=sig;render(role,assignments)}else{const root=ensureRoot();root.hidden=false;markActive()}
 }
 function hide(){const root=document.getElementById('rf4GlobalNav');if(root)root.hidden=true;document.body.classList.remove('rf4-global-nav-active')}
 function show(){const root=ensureRoot();root.hidden=false}
 window.RF4StableNav={sync,markActive,hide,show};
-ensureRoot();
+if(R.route())ensureRoot();
 addEventListener('hashchange',()=>requestAnimationFrame(()=>{const r=R.route();if(!r)return hide();show();markActive()}));
 })();
