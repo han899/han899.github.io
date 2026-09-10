@@ -1,6 +1,6 @@
 'use strict';
 (function(){
- const U='https://ppdrsoltvqiqnbnlimbb.supabase.co',K='sb_publishable_Ev2C5000djbQq4wLDUKh9A_oF3H3WBd',V='20260910p',app=document.getElementById('app');let sb;
+ const U='https://ppdrsoltvqiqnbnlimbb.supabase.co',K='sb_publishable_Ev2C5000djbQq4wLDUKh9A_oF3H3WBd',V='20260910q',app=document.getElementById('app');let sb;
  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const invite=()=>new URLSearchParams(location.search).get('invite')||'';
  const roleName=r=>({judge:'評審',staff:'工作人員',project_admin:'專案管理員'}[r]||r||'受邀成員');
