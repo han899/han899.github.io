@@ -29,4 +29,26 @@
 .rf4-task-card h3{margin-top:0}
 .rf4-task-row{display:flex;justify-content:space-between;gap:16px;align-items:center;padding:12px 0;border-top:1px solid rgba(64,88,120,.12)}
 .rf4-task-row:first-of-type{border-top:0}
-@media(max-width:700px){.rf4-score-grid{grid-template-columns:1fr}.rf4-sticky{bottom:74px}.rf4-actions .btn{flex:1 1 auto}.review-v4-pending .main{min-height:55vh}.rf4-task-row{align-items:flex-start;flex-direction:column}.rf4-task-row .btn{width:100%}.rf4-task-context{padding:15px}.rf4-assignment-line{display:block}.rf4-assignment-line>b{display:block;margin-bottom:5px}}
+
+/* 快速評審工作區：不換頁、不重畫側邊導覽 */
+body.rf4-fast-open{overflow:hidden}
+.rf4-quick-entry{display:flex;justify-content:space-between;gap:16px;align-items:center;padding:16px 18px;border-radius:18px;margin-bottom:16px;background:rgba(240,247,255,.92);box-shadow:inset 0 0 0 1px rgba(77,124,255,.12)}
+.rf4-quick-entry h2,.rf4-quick-entry p{margin:0}.rf4-quick-entry p{margin-top:5px}
+.rf4-fast-workspace{position:fixed;inset:0;z-index:10000;background:#f6f8fc;overflow:auto;overscroll-behavior:contain}
+.rf4-fast-top{position:sticky;top:0;z-index:5;display:flex;justify-content:space-between;align-items:center;gap:14px;padding:13px 18px;background:rgba(255,255,255,.96);backdrop-filter:blur(14px);box-shadow:0 1px 0 rgba(36,55,84,.10)}
+.rf4-fast-kicker{font-size:.78rem;font-weight:800;letter-spacing:.08em;opacity:.62;margin-bottom:3px}
+.rf4-fast-top-actions{display:flex;gap:8px;align-items:center}
+.rf4-fast-progress{height:4px;background:rgba(57,81,120,.10);position:sticky;top:62px;z-index:5}.rf4-fast-progress span{display:block;height:100%;background:#4d7cff;transition:width .15s ease}
+.rf4-fast-layout{display:grid;grid-template-columns:minmax(0,1fr) 390px;gap:22px;max-width:1480px;margin:0 auto;padding:22px}
+.rf4-fast-reading{min-width:0;background:#fff;border-radius:20px;padding:26px;box-shadow:0 10px 34px rgba(27,44,74,.08)}
+.rf4-fast-side{position:sticky;top:86px;align-self:start;background:#fff;border-radius:20px;padding:20px;box-shadow:0 10px 34px rgba(27,44,74,.08)}
+.rf4-fast-meta{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px}.rf4-fast-title{font-size:1.65rem;line-height:1.35;margin:8px 0 8px}
+.rf4-fast-essay{white-space:pre-wrap;line-height:1.9;font-size:1.06rem;margin-top:20px;padding-top:18px;border-top:1px solid rgba(40,65,100,.10);word-break:break-word}
+.rf4-fast-panel-head h2{margin:0 0 4px}.rf4-fast-panel-head p{margin:0 0 12px}
+.rf4-fast-mini{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.rf4-fast-mini .card{padding:12px}.rf4-fast-mini .metric{font-size:1.45rem}
+.rf4-fast-choice{padding:16px;border-radius:16px;background:rgba(245,247,251,.95);text-align:center;margin:12px 0}.rf4-fast-choice strong{display:block;font-size:1.25rem;margin-top:5px}.rf4-fast-choice.selected{box-shadow:inset 0 0 0 2px rgba(25,135,84,.25);background:rgba(233,248,239,.92)}
+.rf4-fast-big-actions,.rf4-fast-nav{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}.rf4-fast-big-actions .btn,.rf4-fast-nav .btn{min-height:46px}
+.rf4-fast-submit{width:100%;margin-top:12px;min-height:46px}
+.rf4-fast-score-row{display:grid;grid-template-columns:minmax(0,1fr) 120px;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid rgba(40,65,100,.08)}.rf4-fast-score-row span{display:flex;flex-direction:column;gap:2px}.rf4-fast-score-row small{opacity:.62}.rf4-fast-score-row .input{text-align:right;font-weight:700}
+@media(max-width:900px){.rf4-fast-layout{grid-template-columns:1fr;padding:12px;gap:12px}.rf4-fast-side{position:static}.rf4-fast-reading{padding:18px}.rf4-fast-top{padding:10px 12px}.rf4-fast-top-actions .muted{display:none}.rf4-fast-progress{top:58px}}
+@media(max-width:700px){.rf4-score-grid{grid-template-columns:1fr}.rf4-sticky{bottom:74px}.rf4-actions .btn{flex:1 1 auto}.review-v4-pending .main{min-height:55vh}.rf4-task-row{align-items:flex-start;flex-direction:column}.rf4-task-row .btn{width:100%}.rf4-task-context{padding:15px}.rf4-assignment-line{display:block}.rf4-assignment-line>b{display:block;margin-bottom:5px}.rf4-quick-entry{align-items:flex-start;flex-direction:column}.rf4-quick-entry .btn{width:100%}.rf4-fast-title{font-size:1.35rem}.rf4-fast-essay{font-size:1rem;line-height:1.82}.rf4-fast-reading{border-radius:14px}.rf4-fast-side{border-radius:14px;padding:15px}.rf4-fast-score-row{grid-template-columns:minmax(0,1fr) 96px}.rf4-fast-big-actions,.rf4-fast-nav{grid-template-columns:1fr}.rf4-fast-top-actions .btn{padding-left:10px;padding-right:10px}}
