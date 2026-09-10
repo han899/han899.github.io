@@ -1,7 +1,7 @@
 'use strict';
 (function(){
- const U='https://ppdrsoltvqiqnbnlimbb.supabase.co',K='sb_publishable_Ev2C5000djbQq4wLDUKh9A_oF3H3WBd',V='20260910o',app=document.getElementById('app');let sb;
- const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const U='https://ppdrsoltvqiqnbnlimbb.supabase.co',K='sb_publishable_Ev2C5000djbQq4wLDUKh9A_oF3H3WBd',V='20260910p',app=document.getElementById('app');let sb;
+ const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));
  const invite=()=>new URLSearchParams(location.search).get('invite')||'';
  const roleName=r=>({judge:'評審',staff:'工作人員',project_admin:'專案管理員'}[r]||r||'受邀成員');
  const taskSummary=meta=>{const a=Array.isArray(meta.assignment_config)?meta.assignment_config:[];if(meta.role!=='judge'||!a.length)return'';return a.map(x=>{const rounds=[];if(x.round1_enabled)rounds.push('第一輪入圍初選');if(x.round2_enabled)rounds.push('第二輪正式評分');return`${x.group_name}：${rounds.join('＋')}`}).join('、')};
