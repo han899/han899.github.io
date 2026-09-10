@@ -18,4 +18,15 @@
 .rf4-modal-note{margin-top:10px}
 .rf4-inline-score{font-weight:700}
 .rf4-subtle{font-size:.88rem;opacity:.72}
-@media(max-width:700px){.rf4-score-grid{grid-template-columns:1fr}.rf4-sticky{bottom:74px}.rf4-actions .btn{flex:1 1 auto}.review-v4-pending .main{min-height:55vh}}
+.rf4-permission-matrix table{min-width:850px}
+.rf4-permission-matrix td,.rf4-permission-matrix th{vertical-align:middle}
+.rf4-permission-matrix .input{min-width:190px}
+.rf4-assignment-line{display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap;padding:5px 0}
+.rf4-assignment-line>b{min-width:64px}
+.rf4-task-context{padding:18px 20px;border-radius:18px;margin-bottom:16px;background:rgba(255,255,255,.88);box-shadow:0 8px 28px rgba(28,45,77,.08)}
+.rf4-task-context h2{margin:8px 0 6px}
+.rf4-task-context p{margin:5px 0}
+.rf4-task-card h3{margin-top:0}
+.rf4-task-row{display:flex;justify-content:space-between;gap:16px;align-items:center;padding:12px 0;border-top:1px solid rgba(64,88,120,.12)}
+.rf4-task-row:first-of-type{border-top:0}
+@media(max-width:700px){.rf4-score-grid{grid-template-columns:1fr}.rf4-sticky{bottom:74px}.rf4-actions .btn{flex:1 1 auto}.review-v4-pending .main{min-height:55vh}.rf4-task-row{align-items:flex-start;flex-direction:column}.rf4-task-row .btn{width:100%}.rf4-task-context{padding:15px}.rf4-assignment-line{display:block}.rf4-assignment-line>b{display:block;margin-bottom:5px}}
