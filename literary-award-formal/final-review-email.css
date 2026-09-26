@@ -1,0 +1,14 @@
+/* 最終審查評比 */
+.rf-final-title{display:flex;justify-content:space-between;gap:18px;align-items:flex-start}.rf-final-title h2{margin:7px 0 5px}
+.rf-final-toolbar{display:flex;justify-content:space-between;gap:14px;align-items:center;margin-bottom:14px}
+.rf-final-list{display:grid;gap:10px}.rf-final-card{display:grid;grid-template-columns:42px 78px minmax(0,1fr) auto;align-items:center;gap:12px;padding:14px 16px;border-radius:18px;background:rgba(255,255,255,.94);box-shadow:0 8px 28px rgba(35,51,84,.07);border:1px solid rgba(62,82,118,.08);transition:transform .12s ease,box-shadow .12s ease}
+.rf-final-card:hover{box-shadow:0 12px 32px rgba(35,51,84,.12)}.rf-final-ghost{opacity:.45}.rf-final-drag{font-size:23px;cursor:grab;touch-action:none;text-align:center;color:#718096;user-select:none}.rf-final-drag:active{cursor:grabbing}
+.rf-final-rankbox{text-align:center;padding:8px;border-radius:13px;background:#f4f7ff}.rf-final-rankbox span{display:block;font-size:10px;color:#718096;font-weight:800}.rf-final-rankbox strong{font-size:1.4rem}.rf-final-rankbox i{font-style:normal}
+.rf-final-card-main h3{margin:4px 0 7px}.rf-final-metrics{display:flex;gap:13px;flex-wrap:wrap;font-size:.84rem;color:#718096}.rf-final-metrics b{color:#344766}
+.rf-final-modal-head{display:flex;justify-content:space-between;gap:18px}.rf-final-modal-head h2{margin:7px 0}.rf-final-work-body{margin-top:18px;padding-top:18px;border-top:1px solid rgba(55,75,105,.12);font-size:1.04rem;line-height:1.9;white-space:normal;max-height:65vh;overflow:auto}
+
+/* 郵件中心 */
+.rf-mail-recipient-head{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:10px}
+.rf-mail-vars{padding:10px 12px;margin:12px 0;border-radius:12px;background:#f6f8fd;font-size:.86rem;color:#54647d}
+.rf-mail-body{min-height:260px;line-height:1.65;font-family:inherit;resize:vertical}
+@media(max-width:760px){.rf-final-title,.rf-final-toolbar,.rf-mail-recipient-head{flex-direction:column;align-items:stretch}.rf-final-card{grid-template-columns:34px 64px minmax(0,1fr)}.rf-final-card>.btn{grid-column:2/4;width:100%}.rf-final-metrics{gap:7px}.rf-final-title>.btn{width:100%}}
