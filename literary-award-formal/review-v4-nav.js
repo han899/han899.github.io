@@ -32,7 +32,7 @@ function judgeReview(assignments){
  const rows=GROUPS.filter(g=>byGroup.has(g)).map(g=>{const a=byGroup.get(g),parts=[];if(a.round1_enabled)parts.push(btn('round1','第一輪｜入圍初選',g,'快速審查'));if(a.round2_enabled)parts.push(btn('round2','第二輪｜正式評分',g,'快速評分'));return`<div class="rf4-nav-group"><div class="rf4-nav-group-title">${R.esc(g)}</div>${parts.join('')}</div>`}).join('');
  return `<div class="rf4-nav-section rf4-review-map"><div class="rf4-nav-section-title">我的評審任務</div>${rows||'<div class="rf4-nav-empty">目前沒有被指派的評審任務</div>'}</div>`;
 }
-function adminTail(){return `<div class="rf4-nav-section"><div class="rf4-nav-section-title">結果與系統</div>${btn('awards','得獎名單')}${btn('settings','專案設定')}${btn('audit','操作紀錄')}</div>`}
+function adminTail(){const sys=R.s.role==='platform_admin';return `<div class="rf4-nav-section"><div class="rf4-nav-section-title">結果與系統</div>${sys?btn('finalReview','最終審查評比','','拖拉確認最終名次'):''}${btn('awards','得獎名單')}${sys?btn('emailCenter','郵件中心','','通知、範本與寄送紀錄'):''}${btn('settings','專案設定')}${btn('audit','操作紀錄')}</div>`}
 function render(role,assignments){
  const root=ensureRoot();let html='<div class="rf4-global-nav-inner">'+generalItems(role);
  if(role==='judge')html+=judgeReview(assignments);else if(['platform_admin','project_admin'].includes(role))html+=adminReview()+adminTail();
