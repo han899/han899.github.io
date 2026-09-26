@@ -79,7 +79,7 @@ async function exportWorkbook(){
    '報名Email':x.submission_email,'學生電話':x.student_phone,'學生Email':x.student_email,
    '家長姓名':x.parent_name,'家長電話':x.parent_phone,'家長Email':x.parent_email,
    '指導老師':x.adviser_name,'指導老師電話':x.adviser_phone,'指導老師Email':x.adviser_email,
-   '投稿時間':x.submitted_at?new Date(x.submitted_at).toLocaleString('zh-TW',{hour12:false}):''
+   '投稿字數':x.char_count,'句號數':x.period_count,'標點數':x.punctuation_count,'電子報意願':x.newsletter_opt_in,'著作授權同意':x.copyright_consent,'原創聲明':x.originality_declaration,'最終確認內容':x.final_confirmation,'人工審查備註':x.manual_review_note,'來源原始檔':x.source_filename,'投稿時間':x.submitted_at?new Date(x.submitted_at).toLocaleString('zh-TW',{hour12:false}):''
   }));
   const wb=XLSX.utils.book_new();
   const make=(name,list)=>{
