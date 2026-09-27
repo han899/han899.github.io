@@ -19,3 +19,15 @@
 .rf-mail-schedule-box{grid-column:1/-1;display:grid;grid-template-columns:minmax(220px,1fr) auto;gap:10px;align-items:center;padding:12px;border-radius:14px;background:#f6f8fd}
 .rf-mail-history-detail{margin-top:12px}.rf-mail-history-detail summary{cursor:pointer;font-weight:700}
 @media(max-width:760px){.rf-mail-actions-grid{grid-template-columns:1fr}.rf-mail-schedule-box{grid-template-columns:1fr}.rf-mail-schedule-box .btn{width:100%}}
+
+
+/* Gmail 免費串接 */
+.rf-gmail-setup details>summary{cursor:pointer;font-size:1rem;padding:2px 0}
+.rf-gmail-steps{margin-top:14px;padding:14px;border-radius:14px;background:#f7f9fe}
+.rf-gmail-steps ol{margin:0 0 12px 1.2rem;padding:0}.rf-gmail-steps li{margin:6px 0;line-height:1.55}
+.rf-gmail-secret-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
+.rf-mail-operation-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.rf-mail-op{padding:14px;border:1px solid rgba(60,80,115,.11);border-radius:16px;background:rgba(255,255,255,.8)}
+.rf-mail-op>b{display:block;margin-bottom:5px}.rf-mail-op .input{margin:8px 0}
+.rf-mail-recent{margin-top:14px}.rf-mail-recent summary{cursor:pointer;font-weight:700}
+@media(max-width:900px){.rf-mail-operation-grid{grid-template-columns:1fr}.rf-gmail-secret-row{grid-template-columns:1fr}}
