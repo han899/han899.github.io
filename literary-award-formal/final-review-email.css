@@ -12,3 +12,10 @@
 .rf-mail-vars{padding:10px 12px;margin:12px 0;border-radius:12px;background:#f6f8fd;font-size:.86rem;color:#54647d}
 .rf-mail-body{min-height:260px;line-height:1.65;font-family:inherit;resize:vertical}
 @media(max-width:760px){.rf-final-title,.rf-final-toolbar,.rf-mail-recipient-head{flex-direction:column;align-items:stretch}.rf-final-card{grid-template-columns:34px 64px minmax(0,1fr)}.rf-final-card>.btn{grid-column:2/4;width:100%}.rf-final-metrics{gap:7px}.rf-final-title>.btn{width:100%}}
+
+/* Gmail 免費串接 */
+.rf-gmail-steps{margin:12px 0 16px;padding-left:1.35rem;line-height:1.75}.rf-gmail-steps li{margin:5px 0}.rf-gmail-steps code{padding:2px 6px;border-radius:6px;background:#f1f4fa}
+.rf-mail-actions-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;align-items:stretch}.rf-mail-actions-grid>.btn{min-height:44px}
+.rf-mail-schedule-box{grid-column:1/-1;display:grid;grid-template-columns:minmax(220px,1fr) auto;gap:10px;align-items:center;padding:12px;border-radius:14px;background:#f6f8fd}
+.rf-mail-history-detail{margin-top:12px}.rf-mail-history-detail summary{cursor:pointer;font-weight:700}
+@media(max-width:760px){.rf-mail-actions-grid{grid-template-columns:1fr}.rf-mail-schedule-box{grid-template-columns:1fr}.rf-mail-schedule-box .btn{width:100%}}
