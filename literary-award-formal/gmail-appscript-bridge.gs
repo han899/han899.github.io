@@ -184,9 +184,16 @@ function cancelScheduled_(ids, deleteDrafts) {
         results.push({schedule_id:id, ok:false, error:'此排程已寄出'});
         return;
       }
-      if (deleteDrafts && job.draft_id) {
-        try { GmailApp.getDraft(job.draft_id).deleteDraft(); } catch (_) {}
+      let existingDraft = null;
+      if (job.draft_id) {
+        try {
+          existingDraft = GmailApp.getDraft(job.draft_id);
+        } catch (_) {
+          results.push({schedule_id:id, ok:false, error:'Gmail 草稿已不存在，可能已被手動寄出或刪除，請重新整理排程狀態。'});
+          return;
+        }
       }
+      if (deleteDrafts && existingDraft) existingDraft.deleteDraft();
       job.status = 'cancelled';
       job.cancelled_at = new Date().toISOString();
       props.setProperty(key, JSON.stringify(job));
