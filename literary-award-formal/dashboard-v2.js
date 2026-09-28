@@ -31,7 +31,11 @@
     shell('<section class="section"><div class="rf-overview-loading"><div class="loader-dots"><i></i><i></i><i></i></div><div class="muted">載入專案總覽…</div></div></section>');
     R.s.user=S.user;R.s.profile=S.profile;R.s.project=S.project;R.s.role=S.role;R.s.group='';
     try{
-      await overviewRenderer();
+      await Promise.race([
+        overviewRenderer(),
+        new Promise((_,reject)=>setTimeout(()=>reject(new Error('專案總覽渲染逾時，請重新載入總覽。')),8000))
+      ]);
+      if(R.main()?.querySelector('.rf-overview-loading'))throw new Error('專案總覽模組未完成畫面更新，請重新載入總覽。');
       window.RF4StableNav?.sync?.();
     }catch(e){
       console.error(e);
