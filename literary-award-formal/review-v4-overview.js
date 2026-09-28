@@ -91,7 +91,8 @@ R.pages.overview=async function(){
 
  const alertHtml=alerts.length?'<section class="section"><div class="rf-overview-section-head"><div><h3>目前待處理</h3><p class="muted">依現況自動整理，完成後會從這裡消失。</p></div><span class="badge warn">'+alerts.length+' 項</span></div><div class="rf-overview-alerts">'+alerts.map(a=>'<a class="rf-overview-alert" href="'+link(a.p,a.p==='submissions'||a.p==='people'?'':a.group)+'"><b>'+R.esc(a.group)+'</b><span>'+R.esc(a.t)+'</span><i>前往處理 →</i></a>').join('')+'</div></section>':'<section class="section"><div class="rf4-banner good"><b>目前沒有需要立即處理的評審流程提醒。</b></div></section>';
 
- const judgeRows=judges.map(j=>{
+ const activeJudges=judges.filter(j=>j.is_active&&j.results_included),hiddenJudges=judges.length-activeJudges.length;
+ const judgeRows=activeJudges.map(j=>{
    const active=j.is_active&&j.results_included;
    const r1=j.round1_enabled?(j.r1_submitted?R.badge('已正式送出','good'):'<span><b>'+j.r1_viewed+'/'+j.r1_total+'</b> 已閱讀</span>'):'—';
    const r2=j.round2_enabled?(j.r2_submitted?R.badge('已正式送出','good'):'<span><b>'+j.r2_completed+'/'+j.r2_total+'</b> 已評分</span>'):'—';
@@ -102,7 +103,7 @@ R.pages.overview=async function(){
   '<section class="section"><div class="rf-overview-title"><div><div class="badge purple">管理儀表板</div><h2>專案總覽</h2><p class="muted">一頁掌握作品、第一輪、第二輪與最終審查的目前狀態。</p></div><div class="muted tiny">更新時間 '+R.fmt(d.generated_at)+'</div></div><div class="rf-overview-kpis">'+kpis+'</div></section>'+
   '<section class="section"><div class="rf-overview-section-head"><div><h3>各組評審進度</h3><p class="muted">固定依小學組 → 國中組 → 高中職組排列。</p></div><div class="rf4-actions"><a class="btn" href="'+link('people')+'">成員與權限</a><a class="btn" href="'+link('submissions')+'">作品管理</a></div></div><div class="rf-overview-groups">'+groupCards+'</div></section>'+
   alertHtml+
-  '<section class="section"><div class="rf-overview-section-head"><div><h3>評審工作狀態</h3><p class="muted">顯示目前各評審在被指派組別的閱讀、評分與正式送出狀態。</p></div><a class="btn" href="'+link('people')+'">管理評審</a></div>'+(judgeRows?'<div class="table-wrap"><table class="rf-overview-judge-table"><thead><tr><th>組別</th><th>評審</th><th>採計狀態</th><th>第一輪</th><th>第二輪</th></tr></thead><tbody>'+judgeRows+'</tbody></table></div>':'<div class="empty">目前尚未指派評審。</div>')+'</section>'
+  '<section class="section"><div class="rf-overview-section-head"><div><h3>評審工作狀態</h3><p class="muted">只列目前啟用且採計的正式評審。'+(hiddenJudges>0?'另有 '+hiddenJudges+' 筆停用／不採計的歷史指派未列在此表。':'')+'</p></div><a class="btn" href="'+link('people')+'">管理評審</a></div>'+(judgeRows?'<div class="table-wrap"><table class="rf-overview-judge-table"><thead><tr><th>組別</th><th>評審</th><th>採計狀態</th><th>第一輪</th><th>第二輪</th></tr></thead><tbody>'+judgeRows+'</tbody></table></div>':'<div class="empty">目前尚未指派評審。</div>')+'</section>'
  );
 };
 })();
