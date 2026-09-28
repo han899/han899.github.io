@@ -1,0 +1,8 @@
+
+/* 系統管理員作品檢視與批次下載 */
+.rf-admin-work-link{appearance:none;border:0;background:none;padding:0;color:inherit;font:inherit;text-align:left;cursor:pointer;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}
+.rf-admin-work-link:hover{color:#315ec9}
+.rf-admin-work-head{display:flex;justify-content:space-between;align-items:flex-start;gap:18px}
+.rf-admin-work-head h2{margin:7px 0 5px}
+.rf-admin-download-actions{display:flex;justify-content:flex-end;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0}
+@media(max-width:760px){.rf-admin-work-head{flex-direction:column}.rf-admin-work-head .rf4-actions,.rf-admin-download-actions{width:100%}.rf-admin-download-actions .btn{flex:1 1 100%}}
