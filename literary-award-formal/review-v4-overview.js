@@ -2,6 +2,7 @@
 (function(){
 const R=window.RF4;if(!R)return;const {sb,s}=R;
 const GROUPS=['小學組','國中組','高中職組'];
+const setOverviewMain=html=>{const m=document.querySelector('.main');if(!m)throw new Error('找不到專案總覽顯示區域');m.innerHTML=html;m.dataset.reviewV4='1';m.dataset.reviewRoute=(location.hash||'').replace(/^#/,'');document.documentElement.classList.remove('review-v4-pending');document.documentElement.classList.add('review-v4-ready');queueMicrotask(()=>window.RF4StableNav?.markActive?.());return true;};
 const pct=(a,b)=>b>0?Math.max(0,Math.min(100,Math.round((Number(a)||0)/(Number(b)||1)*100))):0;
 const link=(page,group='')=>'#project/'+s.project.id+'/'+page+(group?'/'+encodeURIComponent(group):'');
 const progress=(done,total,cls='')=>'<div class="rf-overview-progress '+cls+'"><span style="width:'+pct(done,total)+'%"></span></div>';
@@ -43,7 +44,7 @@ async function judgeOverview(){
    const r2html=a.round2_enabled?'<div class="rf-overview-stage"><div class="rf-overview-stage-head"><b>第二輪</b>'+R.badge(r2s.has(g)?'已正式送出':'進行中',r2s.has(g)?'good':'')+'</div><div class="rf-overview-stage-value">'+Number(x2.completed_scores||0)+' / '+Number(x2.total_finalists||0)+' <span>已評分</span></div>'+progress(x2.completed_scores,x2.total_finalists)+'</div>':'';
    return '<article class="rf-overview-group-card"><div class="rf-overview-group-head"><div><h3>'+R.esc(g)+'</h3><div class="muted tiny">只顯示你被指派的審查任務</div></div></div>'+r1html+r2html+'<div class="rf-overview-actions">'+(a.round1_enabled?'<a class="btn" href="'+link('round1',g)+'">進入第一輪</a>':'')+(a.round2_enabled?'<a class="btn primary" href="'+link('round2',g)+'">進入第二輪</a>':'')+'</div></article>';
  }).join('');
- R.setMain('<section class="section"><div class="rf-overview-title"><div><h2>我的評審工作總覽</h2><p class="muted">快速確認各組、各輪目前完成進度。</p></div></div><div class="rf-overview-groups">'+(cards||'<div class="empty">目前沒有被指派的評審任務。</div>')+'</div></section>');
+ setOverviewMain('<section class="section"><div class="rf-overview-title"><div><h2>我的評審工作總覽</h2><p class="muted">快速確認各組、各輪目前完成進度。</p></div></div><div class="rf-overview-groups">'+(cards||'<div class="empty">目前沒有被指派的評審任務。</div>')+'</div></section>');
 }
 
 async function staffOverview(){
@@ -53,7 +54,7 @@ async function staffOverview(){
    const l=(rows||[]).filter(x=>x.group_name===g),formal=l.filter(x=>x.status==='formal'&&!x.exclusion_code&&!String(x.exclusion_reason||'').trim()).length,excluded=l.length-formal;
    return{group_name:g,total:l.length,formal,excluded};
  });
- R.setMain('<section class="section"><h2>專案總覽</h2><p class="muted">目前作品件數概況。</p><div class="rf-overview-groups">'+groups.map(g=>'<article class="rf-overview-group-card"><h3>'+g.group_name+'</h3><div class="rf-overview-mini-grid"><div><span>全部</span><b>'+g.total+'</b></div><div><span>正式</span><b>'+g.formal+'</b></div><div><span>剔除</span><b>'+g.excluded+'</b></div></div><div class="rf-overview-actions"><a class="btn primary" href="'+link('submissions')+'">作品管理</a></div></article>').join('')+'</div></section>');
+ setOverviewMain('<section class="section"><h2>專案總覽</h2><p class="muted">目前作品件數概況。</p><div class="rf-overview-groups">'+groups.map(g=>'<article class="rf-overview-group-card"><h3>'+g.group_name+'</h3><div class="rf-overview-mini-grid"><div><span>全部</span><b>'+g.total+'</b></div><div><span>正式</span><b>'+g.formal+'</b></div><div><span>剔除</span><b>'+g.excluded+'</b></div></div><div class="rf-overview-actions"><a class="btn primary" href="'+link('submissions')+'">作品管理</a></div></article>').join('')+'</div></section>');
 }
 
 const renderProjectOverview=async function(){
@@ -101,7 +102,7 @@ const renderProjectOverview=async function(){
    return '<tr><td>'+R.esc(j.group_name)+'</td><td><b>'+R.esc(j.display_name||j.email||'未命名評審')+'</b><br><span class="muted tiny">'+R.esc(j.email||'')+'</span></td><td>'+(j.is_active?R.badge(j.results_included?'啟用／採計':'啟用／不採計',j.results_included?'good':'warn'):R.badge('已停用',active?'':'bad'))+'</td><td>'+r1+'</td><td>'+r2+'</td></tr>';
  }).join('');
 
- R.setMain(
+ setOverviewMain(
   '<section class="section"><div class="rf-overview-title"><div><div class="badge purple">管理儀表板</div><h2>專案總覽</h2><p class="muted">一頁掌握作品、第一輪、第二輪與最終審查的目前狀態。</p></div><div class="muted tiny">更新時間 '+R.fmt(d.generated_at)+'</div></div><div class="rf-overview-kpis">'+kpis+'</div></section>'+
   '<section class="section"><div class="rf-overview-section-head"><div><h3>各組評審進度</h3><p class="muted">固定依小學組 → 國中組 → 高中職組排列。</p></div><div class="rf4-actions"><a class="btn" href="'+link('people')+'">成員與權限</a><a class="btn" href="'+link('submissions')+'">作品管理</a></div></div><div class="rf-overview-groups">'+groupCards+'</div></section>'+
   alertHtml+
