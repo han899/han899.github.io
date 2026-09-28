@@ -17,3 +17,5 @@
 .rf-overview-judge-table td{vertical-align:middle}
 @media(max-width:1100px){.rf-overview-kpis{grid-template-columns:repeat(3,1fr)}.rf-overview-groups{grid-template-columns:1fr}}
 @media(max-width:700px){.rf-overview-title,.rf-overview-section-head{flex-direction:column}.rf-overview-kpis{grid-template-columns:repeat(2,1fr)}.rf-overview-alert{grid-template-columns:1fr;gap:4px}.rf-overview-alert i{justify-self:start}.rf-overview-actions .btn{flex:1 1 100%}}
+
+.rf-overview-loading{min-height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
