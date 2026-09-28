@@ -55,7 +55,17 @@
   async function auditPage(){const {data:logs,error}=await sb.from('audit_logs').select('*').eq('project_id',S.project.id).order('created_at',{ascending:false}).limit(500);if(error)return shell(`<section class="section"><div class="danger-note">${esc(error.message)}</div></section>`);shell(`<section class="section"><h2>操作紀錄</h2><div class="table-wrap"><table><thead><tr><th>時間</th><th>動作</th><th>對象</th><th>詳細資料</th></tr></thead><tbody>${(logs||[]).map(l=>`<tr><td>${fmt(l.created_at)}</td><td>${esc(l.action)}</td><td>${esc((l.entity_type||'')+' '+(l.entity_id||''))}</td><td class="code">${esc(l.details?JSON.stringify(l.details):'—')}</td></tr>`).join('')}</tbody></table></div></section>`)}
   async function project(route){await loadProject(route.projectId);S.page=route.page||'overview';const fn={overview,import:importPage,submissions:submissionsPage,people:peoplePage,judging:judgingPage,results:resultsPage,awards:awardsPage,settings:settingsPage,audit:auditPage}[S.page]||overview;await fn()}
   async function render(){try{await identity();const r=parseRoute();if(r.projectId)await project(r);else await home()}catch(e){console.error(e);fail('管理後台無法啟動',e?.message||String(e))}}
-  window.addEventListener('hashchange',render);
+  let renderRunning=false,renderQueued=false;
+  async function safeRender(){
+    if(renderRunning){renderQueued=true;return}
+    renderRunning=true;
+    try{await render()}finally{
+      renderRunning=false;
+      if(renderQueued){renderQueued=false;setTimeout(safeRender,0)}
+    }
+  }
+  window.addEventListener('hashchange',safeRender);
   sb.auth.onAuthStateChange((event)=>{if(event==='SIGNED_OUT')location.href='./'});
-  render();
+  if(document.readyState==='loading')window.addEventListener('DOMContentLoaded',()=>setTimeout(safeRender,0),{once:true});
+  else setTimeout(safeRender,0);
 })();
