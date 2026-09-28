@@ -13,7 +13,7 @@ R.esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 R.fmt=d=>d?new Date(d).toLocaleString('zh-TW',{hour12:false}):'未設定';
 R.localVal=d=>{if(!d)return'';const x=new Date(d),p=n=>String(n).padStart(2,'0');return`${x.getFullYear()}-${p(x.getMonth()+1)}-${p(x.getDate())}T${p(x.getHours())}:${p(x.getMinutes())}`};
 R.iso=v=>v?new Date(v).toISOString():null;
-R.roleName=r=>({platform_admin:'平台總管理員',project_admin:'專案管理員',staff:'工作人員',judge:'評審'}[r]||r||'—');
+R.roleName=r=>({platform_admin:'平台系統管理員',project_admin:'專案管理員',staff:'工作人員',judge:'評審'}[r]||r||'—');
 R.route=()=>{const p=(location.hash||'').replace(/^#/,'').split('/').filter(Boolean);if(p[0]!=='project'||!p[1])return null;let group='';try{group=p[3]?decodeURIComponent(p[3]):''}catch{group=p[3]||''}return{pid:p[1],page:p[2]||'overview',group}};
 R.main=()=>document.querySelector('.main');R.isAdmin=()=>['platform_admin','project_admin'].includes(R.s.role);
 R.badge=(t,c='')=>`<span class="badge ${c}">${R.esc(t)}</span>`;
