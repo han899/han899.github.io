@@ -61,7 +61,9 @@ R.pages.overview=async function(){
  if(s.role==='staff')return staffOverview();
  if(!R.isAdmin())return staffOverview();
 
- const {data,error}=await sb.rpc('get_project_overview_dashboard',{p_project:s.project.id});
+ const request=sb.rpc('get_project_overview_dashboard',{p_project:s.project.id});
+ const timeout=new Promise((_,reject)=>setTimeout(()=>reject(new Error('總覽資料連線逾時，請重新載入總覽。')),6000));
+ const {data,error}=await Promise.race([request,timeout]);
  if(error)throw error;
  const d=data||{},groups=Array.isArray(d.groups)?d.groups:[],judges=Array.isArray(d.judges)?d.judges:[],t=d.totals||{};
  const alerts=groups.flatMap(g=>alertsFor(g).map(a=>({...a,group:g.group_name})));
