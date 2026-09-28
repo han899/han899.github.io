@@ -25,13 +25,13 @@
   async function loadProject(id){const {data:p,error}=await sb.from('projects').select('*').eq('id',id).maybeSingle();if(error||!p)throw new Error('沒有此專案的存取權限。');S.project=p;if(S.profile.platform_role==='platform_admin'){S.role='platform_admin';return}const {data:m,error:me}=await sb.from('project_members').select('role').eq('project_id',id).eq('user_id',S.user.id).eq('is_active',true).maybeSingle();if(me||!m)throw new Error('此帳號未被授權存取該專案。');S.role=m.role}
   async function overview(){
     const R=window.RF4;
-    if(!R?.pages?.overview){
+    const overviewRenderer=R?.overviewPage||R?.pages?.overview;if(!overviewRenderer){
       return shell('<section class="section"><div class="danger-note"><b>新版專案總覽模組未載入</b><br>請重新整理頁面；系統不會再退回舊版總覽。</div><button class="btn" onclick="location.reload()">重新載入</button></section>');
     }
     shell('<section class="section"><div class="rf-overview-loading"><div class="loader-dots"><i></i><i></i><i></i></div><div class="muted">載入專案總覽…</div></div></section>');
     R.s.user=S.user;R.s.profile=S.profile;R.s.project=S.project;R.s.role=S.role;R.s.group='';
     try{
-      await R.pages.overview();
+      await overviewRenderer();
       window.RF4StableNav?.sync?.();
     }catch(e){
       console.error(e);
