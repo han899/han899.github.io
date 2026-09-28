@@ -7,7 +7,7 @@
   const S={user:null,profile:null,projects:[],project:null,role:null,page:'home',group:'all',status:'all',category:'all',search:'',realtime:null};
   const esc=v=>String(v??'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]));
   const fmt=d=>d?new Date(d).toLocaleString('zh-TW',{hour12:false}):'—';
-  const roleLabel=r=>({platform_admin:'平台總管理員',project_admin:'專案管理員',staff:'工作人員',judge:'評審'}[r]||r||'未授權');
+  const roleLabel=r=>({platform_admin:'平台系統管理員',project_admin:'專案管理員',staff:'工作人員',judge:'評審'}[r]||r||'未授權');
   const statusLabel=s=>({draft:'準備中',screening:'初篩中',judging:'評審中',closed:'已結束',archived:'已封存',formal:'正式評分',pending_review:'待確認',excluded:'剔除',locked:'已鎖定',draft_score:'草稿'}[s]||s||'—');
   function setHTML(h){app.innerHTML=h;bindCommon()}
   function bindCommon(){document.querySelectorAll('[data-nav]').forEach(b=>b.onclick=()=>go(b.dataset.nav));document.querySelectorAll('[data-logout]').forEach(b=>b.onclick=logout);}
