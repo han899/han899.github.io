@@ -66,6 +66,5 @@
   }
   window.addEventListener('hashchange',safeRender);
   sb.auth.onAuthStateChange((event)=>{if(event==='SIGNED_OUT')location.href='./'});
-  if(document.readyState==='loading')window.addEventListener('DOMContentLoaded',()=>setTimeout(safeRender,0),{once:true});
-  else setTimeout(safeRender,0);
+  setTimeout(safeRender,0);
 })();
