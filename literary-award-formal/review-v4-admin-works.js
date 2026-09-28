@@ -6,7 +6,7 @@ const STAGES={
  round2_ranked:{label:'第二輪排名作品',folder:'第二輪排名作品'},
  final_ranked:{label:'最終排名作品',folder:'最終排名作品'}
 };
-const isSystemAdmin=()=>s.profile?.platform_role==='platform_admin'||s.role==='platform_admin';
+const isSystemAdmin=()=>['platform_admin','project_admin'].includes(s.role);
 
 function safeName(v,max=80){
  let x=String(v??'').normalize('NFKC').replace(/[\\/:*?"<>|\u0000-\u001f]/g,'_').replace(/\s+/g,' ').trim();
@@ -23,7 +23,7 @@ async function loadZip(){
  return window.JSZip;
 }
 async function openWork(id){
- if(!isSystemAdmin())return R.toast('僅限平台系統管理員檢視作品全文');
+ if(!isSystemAdmin())return R.toast('僅限專案管理員檢視作品全文');
  const {data,error}=await sb.rpc('get_admin_review_work',{p_project:s.project.id,p_submission:id});
  if(error)return R.toast(error.message);
  const x=Array.isArray(data)?data[0]:data;if(!x)return R.toast('找不到可檢視的正式作品');
@@ -41,7 +41,7 @@ async function openWork(id){
  md.querySelector('#rfAdminWorkDownload').onclick=()=>saveBlob(new Blob(['\ufeff'+text],{type:'text/plain;charset=utf-8'}),safeName(x.group_name)+'_'+safeName(x.anonymous_code)+'_'+safeName(x.title)+'.txt');
 }
 async function downloadStage(stage,group=null,button=null){
- if(!isSystemAdmin())return R.toast('僅限平台系統管理員批次下載作品');
+ if(!isSystemAdmin())return R.toast('僅限專案管理員批次下載作品');
  const meta=STAGES[stage];if(!meta)return R.toast('未知的下載階段');
  const old=button?.textContent;if(button){button.disabled=true;button.textContent='整理作品中…'}
  try{
@@ -99,7 +99,7 @@ async function downloadStage(stage,group=null,button=null){
 function downloadButtons(stage,group,opts={}){
  if(!isSystemAdmin())return '';
  const meta=STAGES[stage],showAll=opts.showAll!==false;
- return '<div class="rf-admin-download-actions"><span class="muted tiny">系統管理員專用</span><button class="btn" data-rf-admin-download="'+stage+'" data-rf-admin-group="'+R.esc(group||'')+'">下載'+R.esc(group||'本組')+' '+meta.label+' ZIP</button>'+(showAll?'<button class="btn" data-rf-admin-download="'+stage+'" data-rf-admin-group="">下載全部組別 '+meta.label+' ZIP</button>':'')+'</div>';
+ return '<div class="rf-admin-download-actions"><span class="muted tiny">專案管理員專用</span><button class="btn" data-rf-admin-download="'+stage+'" data-rf-admin-group="'+R.esc(group||'')+'">下載'+R.esc(group||'本組')+' '+meta.label+' ZIP</button>'+(showAll?'<button class="btn" data-rf-admin-download="'+stage+'" data-rf-admin-group="">下載全部組別 '+meta.label+' ZIP</button>':'')+'</div>';
 }
 function bindDownloads(root=document){
  root.querySelectorAll?.('[data-rf-admin-download]').forEach(b=>{b.onclick=()=>downloadStage(b.dataset.rfAdminDownload,b.dataset.rfAdminGroup||null,b)});
