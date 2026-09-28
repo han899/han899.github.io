@@ -56,7 +56,7 @@ async function staffOverview(){
  R.setMain('<section class="section"><h2>專案總覽</h2><p class="muted">目前作品件數概況。</p><div class="rf-overview-groups">'+groups.map(g=>'<article class="rf-overview-group-card"><h3>'+g.group_name+'</h3><div class="rf-overview-mini-grid"><div><span>全部</span><b>'+g.total+'</b></div><div><span>正式</span><b>'+g.formal+'</b></div><div><span>剔除</span><b>'+g.excluded+'</b></div></div><div class="rf-overview-actions"><a class="btn primary" href="'+link('submissions')+'">作品管理</a></div></article>').join('')+'</div></section>');
 }
 
-R.pages.overview=async function(){
+const renderProjectOverview=async function(){
  if(s.role==='judge')return judgeOverview();
  if(s.role==='staff')return staffOverview();
  if(!R.isAdmin())return staffOverview();
@@ -108,4 +108,6 @@ R.pages.overview=async function(){
   '<section class="section"><div class="rf-overview-section-head"><div><h3>評審工作狀態</h3><p class="muted">只列目前啟用且採計的正式評審。'+(hiddenJudges>0?'另有 '+hiddenJudges+' 筆停用／不採計的歷史指派未列在此表。':'')+'</p></div><a class="btn" href="'+link('people')+'">管理評審</a></div>'+(judgeRows?'<div class="table-wrap"><table class="rf-overview-judge-table"><thead><tr><th>組別</th><th>評審</th><th>採計狀態</th><th>第一輪</th><th>第二輪</th></tr></thead><tbody>'+judgeRows+'</tbody></table></div>':'<div class="empty">目前尚未指派評審。</div>')+'</section>'
  );
 };
+R.overviewPage=renderProjectOverview;
+R.pages.overview=renderProjectOverview;
 })();
