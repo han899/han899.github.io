@@ -43,9 +43,10 @@
       '學生手機 (如有)':x.student_phone||'','學生 E-mail (如有)':x.student_email||'',
       '指導老師姓名 (如有)':x.adviser_name||'','指導老師手機 (如有)':x.adviser_phone||'',
       '指導老師 E-mail (如有)':x.adviser_email||'','訂閱【台灣動物之聲】電子報':x.newsletter_opt_in||'',
-      '著作財產權暨肖像權授權同意':x.copyright_consent||'',
-      '原創作品／未用生成式 AI 切結':x.originality_declaration||'',
-      '確認欄':x.final_confirmation||''
+      '本人同意於本作品得獎後，將此作品之著作財產權授權社團法人中華民國關懷生命協會，以及使用本人提供之照片用於得獎作品介紹。頒獎典禮時授權本會安排攝、錄影，本會得自由修飾、使用、公開展示該攝影著作及視聽著作中本人之肖像及聲音。':x.copyright_consent||'',
+      '本人保證本次投稿作品為本人獨立創作完成，未曾於任何競賽獲獎、出版或公開發表，且未使用任何生成式人工智慧（AI）工具進行撰寫。如有不實，願自行承擔相關法律責任，並接受主辦單位取消參賽及得獎資格之處理。':x.originality_declaration||'',
+      '1.  以上各欄位務必確實填寫，如獲獎將以此資料印製獎狀。\n2.  未簽署著作財產權暨肖像權授權同意書者與原創作品切結書，視同放棄參賽資格。':x.final_confirmation||'',
+      '分數':''
     };
   }
   function appendSheet(wb,name,list){
