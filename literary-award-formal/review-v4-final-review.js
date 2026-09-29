@@ -28,6 +28,7 @@ function renumber(){
  const confirmBtn=document.getElementById('rfFinalConfirm');if(confirmBtn)confirmBtn.disabled=true;
 }
 function openWork(row){
+ if(window.RF4AdminWorks?.openWork)return window.RF4AdminWorks.openWork(row.submission_id,{finalRow:row});
  const m=R.modal('<div class="rf-final-modal-head"><div><div class="badge">'+R.esc(row.group_name||gRoute())+'</div><h2>'+R.esc(row.title||'未命名作品')+'</h2><div class="muted">'+R.esc(row.anonymous_code||'')+'｜原第二輪名次 '+R.esc(row.base_overall_rank)+'｜名次加總 '+R.esc(row.rank_sum??'—')+'｜總分 '+R.esc(row.score_sum??'—')+'</div></div><button class="btn" id="rfFinalClose">關閉</button></div><article class="rf-final-work-body">'+R.esc(row.body||'').replace(/\n/g,'<br>')+'</article>');
  m.querySelector('#rfFinalClose').onclick=R.closeModal;
 }
@@ -109,8 +110,8 @@ R.pages.finalReview=async function(){
  const confirmed=!!rows.find(x=>x.confirmed);
  const confirmedAt=rows.find(x=>x.confirmed)?.confirmed_at;
  const tabs=GROUPS.map(g=>'<button class="btn '+(g===group?'primary':'')+'" data-final-group="'+R.esc(g)+'">'+R.esc(g)+'</button>').join('');
- const cards=rows.map(r=>'<article class="rf-final-card" data-id="'+r.submission_id+'"><div class="rf-final-drag" title="拖拉調整名次">⋮⋮</div><div class="rf-final-rankbox"><span>最終</span><strong>#<i class="rf-final-position">'+r.final_position+'</i></strong></div><div class="rf-final-card-main"><div class="rf4-statusline">'+awardBadge(r.award_name)+R.badge(r.anonymous_code||'')+R.badge(r.category||'')+'</div><h3>'+R.esc(r.title||'未命名作品')+'</h3><div class="rf-final-metrics"><span>第二輪預設排序 <b>#'+r.base_position+'</b></span><span>原始名次 <b>'+r.base_overall_rank+'</b></span><span>名次加總 <b>'+R.esc(r.rank_sum??'—')+'</b></span><span>總分 <b>'+R.esc(r.score_sum??'—')+'</b></span></div></div><button class="btn rf-final-open">閱讀全文</button></article>').join('');
- R.setMain('<section class="section"><div class="rf-final-title"><div><div class="badge purple">專案管理員專用</div><h2>最終審查評比</h2><p class="muted">以第二輪正式排名為預設順序。拖拉卡片可微調最終名次；第二輪原始排名與分數永遠保留，不會被覆蓋。</p></div><button class="btn primary" id="rfFinalExport">匯出完整 Excel 總名單</button></div><div class="filters rf4-group-tabs">'+tabs+'</div>'+(window.RF4AdminWorks?.downloadButtons?.('final_ranked',group)||'')+'</section>'+
+ const cards=rows.map(r=>'<article class="rf-final-card" data-id="'+r.submission_id+'"><div class="rf-final-drag" title="拖拉調整名次">⋮⋮</div><div class="rf-final-rankbox"><span>最終</span><strong>#<i class="rf-final-position">'+r.final_position+'</i></strong></div><div class="rf-final-card-main"><div class="rf4-statusline">'+awardBadge(r.award_name)+R.badge(r.anonymous_code||'')+R.badge(r.category||'')+'</div><h3>'+R.esc(r.title||'未命名作品')+'</h3><div class="rf-final-metrics"><span>第二輪預設排序 <b>#'+r.base_position+'</b></span><span>原始名次 <b>'+r.base_overall_rank+'</b></span><span>名次加總 <b>'+R.esc(r.rank_sum??'—')+'</b></span><span>總分 <b>'+R.esc(r.score_sum??'—')+'</b></span><span>平均分 <b>'+R.esc(r.score_average==null?'—':Number(r.score_average).toFixed(2))+'</b></span></div></div><button class="btn rf-final-open">查看作品與評審</button></article>').join('');
+ R.setMain('<section class="section"><div class="rf-final-title"><div><div class="badge purple">專案管理員專用</div><h2>最終審查評比</h2><p class="muted">以第二輪正式排名為預設順序。點開作品可同時查看全文、所有評審分項分數與完整評語；拖拉卡片可微調最終名次，原始排名與分數永遠保留。</p></div><button class="btn primary" id="rfFinalExport">匯出完整 Excel 總名單</button></div><div class="filters rf4-group-tabs">'+tabs+'</div>'+(window.RF4AdminWorks?.downloadButtons?.('final_ranked',group)||'')+'</section>'+
  '<section class="section">'+
  (!round2Confirm?'<div class="rf4-banner warn"><b>'+R.esc(group)+' 第二輪尚未正式確認。</b><br>請先到「第二輪成績」確認排名，之後才能進行最終審查。</div>':'')+
  (loadError?'<div class="danger-note">'+R.esc(loadError)+'</div>':'')+
