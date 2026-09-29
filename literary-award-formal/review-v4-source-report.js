@@ -7,13 +7,14 @@ const APIKEY='sb_publishable_Ev2C5000djbQq4wLDUKh9A_oF3H3WBd';
 const state={batch:null,blob:null,book:null,sheetIndex:0,search:'',sorts:[],hidden:new Set(),freezeCols:1,widths:{},jumpRow:''};
 const isPlatformAdmin=()=>['platform_admin','project_admin'].includes(s.role);
 const fmtBytes=n=>{n=Number(n||0);if(!n)return'—';const u=['B','KB','MB','GB'];let i=0;while(n>=1024&&i<u.length-1){n/=1024;i++}return`${n.toFixed(i?1:0)} ${u[i]}`};
-const safeName=n=>String(n||'report.xlsx').replace(/[\\/\0]/g,'_').replace(/\s+/g,' ').trim().slice(0,160)||'report.xlsx';
+const storageExt=n=>{const m=String(n||'').toLowerCase().match(/\.(xlsx|xls|csv)$/);return m?'.'+m[1]:''};
+const storageKey=(legacy,fileName)=>`${s.project.id}/${Date.now()}-${legacy?'legacy-':''}${crypto.randomUUID()}${storageExt(fileName)}`;
 const hex=buf=>[...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
 async function sha256(file){return hex(await crypto.subtle.digest('SHA-256',await file.arrayBuffer()))}
 async function loadXlsx(){if(window.XLSX)return;await new Promise((ok,no)=>{const sc=document.createElement('script');sc.src='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';sc.onload=ok;sc.onerror=()=>no(new Error('Excel 檢視元件載入失敗'));document.head.appendChild(sc)});if(!window.XLSX)throw new Error('Excel 檢視元件載入失敗')}
 async function listBatches(){const {data,error}=await sb.from('import_batches').select('id,original_filename,row_count,formal_count,pending_count,excluded_count,uploaded_at,sha256,source_storage_path,source_size_bytes,source_mime_type,source_saved_at').eq('project_id',s.project.id).order('uploaded_at',{ascending:false});if(error)throw error;return data||[]}
 async function archiveAndImport(file,msg){
- const mime=file.type||'application/octet-stream',hash=await sha256(file),path=`${s.project.id}/${Date.now()}-${crypto.randomUUID()}-${safeName(file.name)}`;
+ const mime=file.type||'application/octet-stream',hash=await sha256(file),path=storageKey(false,file.name);
  msg.innerHTML='<div class="note">步驟 1/3：正在安全封存原始檔…</div>';
  const {error:upErr}=await sb.storage.from(BUCKET).upload(path,file,{contentType:mime,upsert:false,cacheControl:'3600'});if(upErr)throw new Error('原始報表封存失敗：'+upErr.message);
  try{
@@ -35,7 +36,7 @@ async function backfillBatch(batch,opts={}){
  const input=document.createElement('input');input.type='file';input.accept='.xlsx,.xls,.csv';input.style.display='none';document.body.appendChild(input);
  input.onchange=async()=>{const file=input.files?.[0];input.remove();if(!file)return;try{
   R.toast('正在驗證原始檔 SHA-256…');const hash=await sha256(file);if(batch.sha256&&hash.toLowerCase()!==String(batch.sha256).toLowerCase())throw new Error('SHA-256 不符：你選到的不是這次匯入所使用的原始檔');
-  const mime=file.type||'application/octet-stream',path=`${s.project.id}/${Date.now()}-legacy-${crypto.randomUUID()}-${safeName(file.name)}`;
+  const mime=file.type||'application/octet-stream',path=storageKey(true,file.name);
   const {error:upErr}=await sb.storage.from(BUCKET).upload(path,file,{contentType:mime,upsert:false,cacheControl:'3600'});if(upErr)throw new Error('補存上傳失敗：'+upErr.message);
   const {error:linkErr}=await sb.rpc('backfill_original_import_report',{p_project:s.project.id,p_batch:batch.id,p_sha256:hash,p_storage_path:path,p_size_bytes:file.size,p_mime_type:mime});
   if(linkErr){await sb.storage.from(BUCKET).remove([path]).catch(()=>{});throw new Error(linkErr.message)}
