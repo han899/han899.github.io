@@ -51,9 +51,10 @@ async function saveOrder(group){
  if(error){R.toast(error.message);b.disabled=false;return}
  dirty=false;R.toast('最終評比排序已儲存');await R.pages.finalReview();
 }
-async function confirmFinal(group){
+async function confirmFinal(group,vacantCount=0){
  if(dirty)return R.toast('請先儲存目前排序');
- if(!confirm('確定要確認「'+group+'」最終名次嗎？\n\n確認後，得獎名單會依這份最終排序同步更新。'))return;
+ const vacancyNote=vacantCount?`\n\n目前設定 ${vacantCount} 個獎項名額從缺，這些名額不會自動遞補。`:'';
+ if(!confirm('確定要確認「'+group+'」最終名次嗎？\n\n確認後，得獎名單會依這份最終排序同步更新。'+vacancyNote))return;
  const b=document.getElementById('rfFinalConfirm');b.disabled=true;b.textContent='確認中…';
  const {data,error}=await sb.rpc('confirm_final_review',{p_project:s.project.id,p_group:group});
  if(error){R.toast(error.message);b.disabled=false;b.textContent='確認最終名次';return}
@@ -105,17 +106,33 @@ R.pages.finalReview=async function(){
  if(!isSystemAdmin())return R.setMain('<section class="section"><div class="danger-note">僅限專案管理員進入最終審查評比。</div></section>');
  const group=gRoute();s.group=group;dirty=false;
  const {data:round2Confirm}=await sb.from('result_confirmations').select('confirmed_at').eq('project_id',s.project.id).eq('group_name',group).maybeSingle();
- let rows=[],loadError='';
- try{rows=await fetchRows(group)}catch(e){loadError=e.message||String(e)}
+ let rows=[],slots=[],loadError='';
+ try{
+  const [rowData,slotRes]=await Promise.all([fetchRows(group),sb.rpc('get_final_award_slots',{p_project:s.project.id,p_group:group})]);
+  rows=rowData||[];if(slotRes.error)throw slotRes.error;slots=slotRes.data||[];
+ }catch(e){loadError=e.message||String(e)}
  const confirmed=!!rows.find(x=>x.confirmed);
  const confirmedAt=rows.find(x=>x.confirmed)?.confirmed_at;
  const tabs=GROUPS.map(g=>'<button class="btn '+(g===group?'primary':'')+'" data-final-group="'+R.esc(g)+'">'+R.esc(g)+'</button>').join('');
- const cards=rows.map(r=>'<article class="rf-final-card" data-id="'+r.submission_id+'"><div class="rf-final-drag" title="拖拉調整名次">⋮⋮</div><div class="rf-final-rankbox"><span>最終</span><strong>#<i class="rf-final-position">'+r.final_position+'</i></strong></div><div class="rf-final-card-main"><div class="rf4-statusline">'+awardBadge(r.award_name)+R.badge(r.anonymous_code||'')+R.badge(r.category||'')+'</div><h3>'+R.esc(r.title||'未命名作品')+'</h3><div class="rf-final-metrics"><span>第二輪預設排序 <b>#'+r.base_position+'</b></span><span>原始名次 <b>'+r.base_overall_rank+'</b></span><span>名次加總 <b>'+R.esc(r.rank_sum??'—')+'</b></span><span>總分 <b>'+R.esc(r.score_sum??'—')+'</b></span><span>平均分 <b>'+R.esc(r.score_average==null?'—':Number(r.score_average).toFixed(2))+'</b></span></div></div><button class="btn rf-final-open">查看作品與評審</button></article>').join('');
+ const slotMap=new Map(slots.map(x=>[Number(x.award_position),x]));
+ const vacantCount=slots.filter(x=>x.is_vacant).length;
+ const awardNames=['第一名','第二名','第三名','佳作'];
+ const awardRuleText='第一名 1 位、第二名 2 位、第三名 3 位、佳作 15 位';
+ const awardSlotHtml=awardNames.map(name=>{
+   const list=slots.filter(x=>x.award_name===name);
+   if(!list.length)return '';
+   return '<div class="rf-final-award-group"><div class="rf-final-award-group-head"><b>'+R.esc(name)+'</b><span>'+list.length+' 席</span></div><div class="rf-final-award-slots">'+list.map((x,i)=>{
+     const pos=Number(x.award_position),hasWork=rows.some(r=>Number(r.final_position)===pos),vacant=!!x.is_vacant;
+     return '<div class="rf-final-award-slot '+(vacant?'vacant':'')+' '+(!hasWork?'empty':'')+'"><div><b>第 '+(i+1)+' 席</b><small>總排序 #'+pos+(hasWork?'':'｜目前無作品')+'</small></div>'+(hasWork?'<button class="btn '+(vacant?'danger':'good')+'" data-award-vacancy="'+pos+'" data-vacant="'+(vacant?'1':'0')+'">'+(vacant?'從缺':'錄取')+'</button>':'<span class="badge warn">不足額</span>')+'</div>';
+   }).join('')+'</div></div>';
+ }).join('');
+ const cards=rows.map(r=>{const slot=slotMap.get(Number(r.final_position)),vacant=!!slot?.is_vacant;return '<article class="rf-final-card" data-id="'+r.submission_id+'"><div class="rf-final-drag" title="拖拉調整名次">⋮⋮</div><div class="rf-final-rankbox"><span>最終</span><strong>#<i class="rf-final-position">'+r.final_position+'</i></strong></div><div class="rf-final-card-main"><div class="rf4-statusline">'+(vacant?R.badge('此名額從缺','bad'):awardBadge(r.award_name))+R.badge(r.anonymous_code||'')+R.badge(r.category||'')+'</div><h3>'+R.esc(r.title||'未命名作品')+'</h3><div class="rf-final-metrics"><span>第二輪預設排序 <b>#'+r.base_position+'</b></span><span>原始名次 <b>'+r.base_overall_rank+'</b></span><span>名次加總 <b>'+R.esc(r.rank_sum??'—')+'</b></span><span>總分 <b>'+R.esc(r.score_sum??'—')+'</b></span><span>平均分 <b>'+R.esc(r.score_average==null?'—':Number(r.score_average).toFixed(2))+'</b></span></div></div><button class="btn rf-final-open">查看作品與評審</button></article>'}).join('');
  R.setMain('<section class="section"><div class="rf-final-title"><div><div class="badge purple">專案管理員專用</div><h2>最終審查評比</h2><p class="muted">以第二輪正式排名為預設順序。點開作品會進入快速閱覽模式，可直接切換上一篇／下一篇、調整作品與評審區寬度；拖拉卡片可微調最終名次，原始排名與分數永遠保留。</p></div><button class="btn primary" id="rfFinalExport">匯出完整 Excel 總名單</button></div><div class="filters rf4-group-tabs">'+tabs+'</div>'+(window.RF4AdminWorks?.downloadButtons?.('final_ranked',group)||'')+'</section>'+
  '<section class="section">'+
  (!round2Confirm?'<div class="rf4-banner warn"><b>'+R.esc(group)+' 第二輪尚未正式確認。</b><br>請先到「第二輪成績」確認排名，之後才能進行最終審查。</div>':'')+
  (loadError?'<div class="danger-note">'+R.esc(loadError)+'</div>':'')+
- (confirmed?'<div class="rf4-banner good"><b>此組最終名次已確認</b><br>確認時間：'+R.fmt(confirmedAt)+'。若重新拖拉並儲存，系統會撤回確認並要求再次確認。</div>':'<div class="rf4-banner"><b>目前為最終審查草稿</b><br>調整後先儲存排序，再按「確認最終名次」。</div>')+
+ (confirmed?'<div class="rf4-banner good"><b>此組最終名次已確認</b><br>確認時間：'+R.fmt(confirmedAt)+'。若重新拖拉、調整從缺並儲存，系統會撤回確認並要求再次確認。</div>':'<div class="rf4-banner"><b>目前為最終審查草稿</b><br>調整排序與從缺設定後，再按「確認最終名次」。</div>')+
+ '<div class="rf-final-award-config"><div class="rf-final-award-config-head"><div><h3>獎項名額與從缺設定</h3><p class="muted">'+awardRuleText+'。作品未達標準時，可將個別名額切換為「從缺」；從缺名額不會自動由後面的作品遞補。</p></div><div>'+R.badge(vacantCount?'目前從缺 '+vacantCount+' 席':'目前無從缺',vacantCount?'warn':'good')+'</div></div><div class="rf-final-award-grid">'+awardSlotHtml+'</div></div>'+
  (rows.length?'<div class="rf-final-toolbar"><div><b>'+R.esc(group)+'</b>｜共 '+rows.length+' 份第二輪評比作品</div><div class="rf4-actions"><button class="btn" id="rfFinalReset">重設為第二輪排名</button><button class="btn" id="rfFinalSave" disabled>排序已儲存</button><button class="btn primary" id="rfFinalConfirm" '+(confirmed?'disabled':'')+'>確認最終名次</button></div></div><div class="rf-final-list" id="rfFinalList">'+cards+'</div>':'<div class="empty">目前沒有可進行最終審查的作品。</div>')+
  '</section>');
  document.querySelectorAll('[data-final-group]').forEach(b=>b.onclick=()=>gotoGroup(b.dataset.finalGroup));
@@ -128,7 +145,14 @@ R.pages.finalReview=async function(){
  document.querySelectorAll('.rf-final-card').forEach(c=>c.onclick=e=>{if(e.target.closest('button,.rf-final-drag'))return;openWork(byId.get(c.dataset.id),currentRows())});
  document.getElementById('rfFinalReset').onclick=()=>resetOrder(group);
  document.getElementById('rfFinalSave').onclick=()=>saveOrder(group);
- document.getElementById('rfFinalConfirm').onclick=()=>confirmFinal(group);
+ document.querySelectorAll('[data-award-vacancy]').forEach(b=>b.onclick=async()=>{
+   const pos=Number(b.dataset.awardVacancy),next=b.dataset.vacant!=='1';
+   const msg=next?'確定將這個獎項名額設為「從缺」嗎？\n\n此名額不會由後面的作品自動遞補。':'確定取消這個名額的「從缺」設定，恢復為正常錄取嗎？';
+   if(!confirm(msg))return;b.disabled=true;
+   const {error}=await sb.rpc('set_final_award_slot_vacancy',{p_project:s.project.id,p_group:group,p_position:pos,p_vacant:next});
+   if(error){b.disabled=false;return R.toast(error.message)}R.toast(next?'已設為從缺':'已恢復錄取');await R.pages.finalReview();
+ });
+ document.getElementById('rfFinalConfirm').onclick=()=>confirmFinal(group,vacantCount);
  if(await loadSortable()){
    sortable?.destroy?.();
    sortable=Sortable.create(document.getElementById('rfFinalList'),{animation:120,handle:'.rf-final-drag',ghostClass:'rf-final-ghost',onEnd:renumber});
