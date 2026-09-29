@@ -15,9 +15,9 @@
 .rf-admin-final-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .rf-admin-final-meta span{background:rgba(242,246,255,.9);border:1px solid rgba(101,117,154,.1);border-radius:10px;padding:7px 9px;font-size:12px;color:#5e6f8c}
 .rf-admin-final-meta b{color:#26344d}
-.rf-admin-review-layout{display:grid;grid-template-columns:minmax(0,1.18fr) minmax(390px,.82fr);gap:14px;min-height:0;flex:1;overflow:hidden;padding-top:14px}
+.rf-admin-review-layout{--rf-admin-reading-width:58%;display:grid;grid-template-columns:minmax(0,var(--rf-admin-reading-width)) 10px minmax(320px,1fr);gap:8px;min-height:0;flex:1;overflow:hidden;padding-top:10px}
 .rf-admin-reading-pane,.rf-admin-review-pane{min-height:0;overflow:auto;scrollbar-gutter:stable}
-.rf-admin-reading-pane{padding:0 12px 18px 2px;border-right:1px solid rgba(93,110,145,.1)}
+.rf-admin-reading-pane{padding:0 8px 18px 2px}
 .rf-admin-review-pane{padding:0 3px 18px 2px}
 .rf-admin-pane-title{position:sticky;top:0;z-index:2;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:4px 0 10px;background:linear-gradient(#f9fbff 72%,rgba(249,251,255,.88),rgba(249,251,255,0))}
 .rf-admin-reading-pane .rf-final-work-body{font-family:"Noto Serif TC","Songti TC",serif;font-size:17px;line-height:1.95;color:#2d3547;max-width:78ch;margin:0 auto;padding:12px 6px 30px}
@@ -60,11 +60,20 @@
  .rf-admin-review-layout{grid-template-columns:1fr;overflow:visible}
  .rf-admin-reading-pane,.rf-admin-review-pane{overflow:visible}
  .rf-admin-reading-pane{border-right:0;border-bottom:1px solid rgba(93,110,145,.1);padding:0 0 14px}
+ .rf-admin-splitter{display:none}
+ .rf-admin-browsebar{align-items:flex-start;flex-direction:column}
+ .rf-admin-browsebar,.rf-admin-browsebar-single{justify-content:flex-start}
+ .rf-admin-split-presets{justify-content:flex-start}
  .rf-admin-review-toolbar,.rf-admin-pane-title{position:static;background:none}
 }
 @media(max-width:700px){
  .rf-admin-review-modal{padding:14px}
  .rf-admin-review-summary{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .rf-admin-browse-nav{width:100%;grid-template-columns:1fr auto 1fr}
+ .rf-admin-browse-nav .btn:last-child{justify-self:stretch}
+ .rf-admin-browse-nav .btn:first-child{justify-self:stretch}
+ .rf-admin-split-presets{width:100%}
+ .rf-admin-browse-hint{width:100%;margin-left:0}
  .rf-admin-review-toolbar{flex-direction:column}
  .rf-admin-review-toolbar .rf4-actions{width:100%}
  .rf-admin-review-toolbar .btn{flex:1}
@@ -72,3 +81,21 @@
  .rf-admin-r2-total{grid-template-columns:auto 1fr}
  .rf-admin-reading-pane .rf-final-work-body{font-size:16px;line-height:1.85;padding-left:2px;padding-right:2px}
 }
+
+
+/* 2026-09-29 最終審查快速閱覽 */
+.rf-admin-browsebar{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0 8px;border-bottom:1px solid rgba(93,110,145,.1)}
+.rf-admin-browsebar-single{justify-content:flex-end}
+.rf-admin-browse-nav{display:grid;grid-template-columns:auto minmax(96px,auto) auto;align-items:center;gap:8px}
+.rf-admin-browse-count{text-align:center;line-height:1.25}
+.rf-admin-browse-count b{display:block;font-size:13px}
+.rf-admin-browse-count span{display:block;color:#718096;font-size:11px;margin-top:2px}
+.rf-admin-split-presets{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:wrap}
+.rf-admin-split-presets .btn{padding:7px 9px;border-radius:10px}
+.rf-admin-browse-hint{margin-left:4px}
+.rf-admin-splitter{position:relative;cursor:col-resize;min-height:0;border-radius:999px;outline:none;touch-action:none}
+.rf-admin-splitter::before{content:"";position:absolute;inset:0 3px;border-radius:999px;background:rgba(113,128,160,.1);transition:.16s ease}
+.rf-admin-splitter span{position:absolute;left:50%;top:50%;width:4px;height:42px;transform:translate(-50%,-50%);border-radius:999px;background:rgba(74,105,255,.42);box-shadow:0 0 0 1px rgba(255,255,255,.8)}
+.rf-admin-splitter:hover::before,.rf-admin-splitter:focus::before{background:rgba(74,105,255,.12)}
+.rf-admin-splitter:hover span,.rf-admin-splitter:focus span{background:rgba(74,105,255,.72)}
+body.rf-admin-resizing,body.rf-admin-resizing *{cursor:col-resize!important;user-select:none!important}
