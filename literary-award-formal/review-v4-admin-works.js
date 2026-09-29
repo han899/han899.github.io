@@ -52,7 +52,8 @@ async function loadReviewBundle(id,group){
  r1.forEach(x=>ids.add(x.judge_user_id));scores.forEach(x=>ids.add(x.judge_user_id));
  const judges=[...ids].map(uid=>({
   uid,member:mm.get(uid),assignment:am.get(uid),r1:r1m.get(uid),r1Submitted:r1Sent.get(uid),r2:sm.get(uid),r2Submitted:r2Sent.get(uid),rank:rankm.get(uid)
- })).sort((a,b)=>judgeLabel(a.member,a.uid).localeCompare(judgeLabel(b.member,b.uid),'zh-Hant'));
+ })).filter(j=>j.member?.results_included===true)
+   .sort((a,b)=>judgeLabel(a.member,a.uid).localeCompare(judgeLabel(b.member,b.uid),'zh-Hant'));
  return{judges};
 }
 function renderScoreItems(score){
@@ -68,9 +69,9 @@ function renderScoreItems(score){
 }
 function renderReviewBundle(bundle){
  const judges=bundle?.judges||[];
- if(!judges.length)return '<div class="rf-admin-review-empty">目前沒有這篇作品的評審紀錄。</div>';
+ if(!judges.length)return '<div class="rf-admin-review-empty">目前沒有這篇作品的正式採計評審紀錄。</div>';
  const selected=judges.filter(j=>j.r1?.selected===true).length,scored=judges.filter(j=>j.r2).length,comments=judges.filter(j=>String(j.r2?.comment||'').trim()).length;
- const summary='<div class="rf-admin-review-summary"><div><span>相關評審</span><b>'+judges.length+'</b></div><div><span>第一輪入選票</span><b>'+selected+'</b></div><div><span>第二輪已有評分</span><b>'+scored+'</b></div><div><span>有文字評語</span><b>'+comments+'</b></div></div>';
+ const summary='<div class="rf-admin-review-summary"><div><span>採計評審</span><b>'+judges.length+'</b></div><div><span>第一輪入選票</span><b>'+selected+'</b></div><div><span>第二輪已有評分</span><b>'+scored+'</b></div><div><span>有文字評語</span><b>'+comments+'</b></div></div>';
  const cards=judges.map(j=>{
   const a=j.assignment||{},m=j.member||{},name=judgeLabel(m,j.uid),r1=j.r1,r2=j.r2;
   const roundTags=(a.round1_enabled||r1?R.badge('第一輪'):'')+(a.round2_enabled||r2?R.badge('第二輪','purple'):'');
@@ -78,7 +79,7 @@ function renderReviewBundle(bundle){
   const r2Html=(a.round2_enabled||r2)?'<section class="rf-admin-review-round"><div class="rf-admin-round-head"><b>第二輪評比</b>'+(j.r2Submitted?R.badge('已正式送出','good'):r2?R.badge('已儲存／未正式送出','warn'):R.badge('尚未評分','warn'))+'</div>'+renderScoreItems(r2)+'<div class="rf-admin-r2-total"><span>總分</span><strong>'+R.esc(r2?.total_score??'—')+'</strong><span>個人正式名次</span><strong>'+(j.rank?.judge_rank?'第 '+R.esc(j.rank.judge_rank)+' 名':'—')+'</strong></div><div class="rf-admin-comment"><div class="muted tiny">評審評語</div><p>'+R.esc(String(r2?.comment||'').trim()||'未填評語').replace(/\n/g,'<br>')+'</p></div><div class="muted tiny rf-admin-review-time">最後更新：'+R.esc(r2?.updated_at?R.fmt(r2.updated_at):'—')+'｜整組送出：'+R.esc(j.r2Submitted?.submitted_at?R.fmt(j.r2Submitted.submitted_at):'—')+'</div></section>':'';
   return '<details class="rf-admin-review-card" open data-rf-review-card="'+R.esc(j.uid)+'"><summary><div><strong>'+R.esc(name)+'</strong><div class="rf4-statusline">'+reviewFlowBadge(m)+roundTags+'</div></div><div class="rf-admin-review-card-score">'+(r2?'<span>第二輪</span><b>'+R.esc(r2.total_score??'—')+'</b>':'<span>第二輪</span><b>—</b>')+'</div></summary><div class="rf-admin-review-card-body">'+r1Html+r2Html+'</div></details>';
  }).join('');
- return summary+'<div class="rf-admin-review-toolbar"><div><h3>所有評審評比內容</h3><p class="muted tiny">依評審分卡呈現，第一輪與第二輪分開，方便交叉比較。</p></div><div class="rf4-actions"><button class="btn" data-rf-review-toggle="1">全部展開</button><button class="btn" data-rf-review-toggle="0">全部收合</button></div></div>'+cards;
+ return summary+'<div class="rf-admin-review-toolbar"><div><h3>所有採計評審評比內容</h3><p class="muted tiny">僅呈現納入正式結果的採計評審，第一輪與第二輪分開，方便交叉比較。</p></div><div class="rf4-actions"><button class="btn" data-rf-review-toggle="1">全部展開</button><button class="btn" data-rf-review-toggle="0">全部收合</button></div></div>'+cards;
 }
 function bindReviewControls(root){
  root.querySelectorAll('[data-rf-review-toggle]').forEach(b=>b.onclick=()=>root.querySelectorAll('.rf-admin-review-card').forEach(d=>d.open=b.dataset.rfReviewToggle==='1'));
