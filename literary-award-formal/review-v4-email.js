@@ -214,7 +214,7 @@ function operationRecipients(testMode){
  const group=testGroups.find(g=>g.id===gid);if(!group)throw new Error('請先選擇測試收件人群組');
  const testers=Array.isArray(group.recipients)?group.recipients:[];if(!testers.length)throw new Error('這個測試群組沒有收件人');
  const sample=list[0],sampleVars=varsFor(sample);
- return testers.map(t=>({...sample,recipient_email:t.email,recipient_name:t.name||t.email,recipient_type:'test',_variables:sampleVars}));
+ return testers.map(t=>({...sample,submission_id:null,recipient_email:t.email,recipient_name:t.name||t.email,recipient_type:'test',_variables:sampleVars}));
 }
 async function perform(mode,testMode=false){
  if(!service.configured)throw new Error('Gmail 尚未連線，請先完成上方免費 Gmail 串接');
