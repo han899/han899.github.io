@@ -123,7 +123,7 @@ R.pages.finalReview=async function(){
  window.RF4AdminWorks?.bindDownloads?.();
  if(!rows.length)return;
  const byId=new Map(rows.map(x=>[x.submission_id,x]));
- const currentRows=()=>[...document.querySelectorAll('.rf-final-card')].map(c=>byId.get(c.dataset.id)).filter(Boolean);
+ const currentRows=()=>[...document.querySelectorAll('.rf-final-card')].map((c,i)=>{const r=byId.get(c.dataset.id);return r?{...r,final_position:i+1}:null}).filter(Boolean);
  document.querySelectorAll('.rf-final-open').forEach(b=>b.onclick=e=>{e.stopPropagation();const row=byId.get(b.closest('.rf-final-card').dataset.id);openWork(row,currentRows())});
  document.querySelectorAll('.rf-final-card').forEach(c=>c.onclick=e=>{if(e.target.closest('button,.rf-final-drag'))return;openWork(byId.get(c.dataset.id),currentRows())});
  document.getElementById('rfFinalReset').onclick=()=>resetOrder(group);
