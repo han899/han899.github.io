@@ -9,6 +9,74 @@
   const fmt=d=>d?new Date(d).toLocaleString('zh-TW',{hour12:false}):'—';
   const roleLabel=r=>({platform_admin:'平台系統管理員',project_admin:'專案管理員',staff:'工作人員',judge:'評審'}[r]||r||'未授權');
   const statusLabel=s=>({draft:'準備中',screening:'初篩中',judging:'評審中',closed:'已結束',archived:'已封存',formal:'正式評分',pending_review:'待確認',excluded:'剔除',locked:'已鎖定',draft_score:'草稿'}[s]||s||'—');
+  async function loadXlsx(){if(window.XLSX)return true;await new Promise((ok,no)=>{const x=document.createElement('script');x.src='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';x.onload=ok;x.onerror=no;document.head.appendChild(x)});return !!window.XLSX}
+  function winnerRow(x){return{
+    '組別':x.group_name||'','獎項':x.award_name||'','最終名次':x.final_position??'',
+    '匿名編號':x.anonymous_code||'','類別':x.category||'',
+    '學生姓名':x.student_name||'','學校':x.school||'','班級':x.class_name||'',
+    '作品名稱':x.title||'','作品內容':x.body||'','出版社':x.publisher||'','科目一':x.subject_1||'','科目二':x.subject_2||'',
+    '報名Email':x.submission_email||'','學生電話':x.student_phone||'','學生Email':x.student_email||'',
+    '家長姓名':x.parent_name||'','家長電話':x.parent_phone||'','家長Email':x.parent_email||'',
+    '指導老師':x.adviser_name||'','指導老師電話':x.adviser_phone||'','指導老師Email':x.adviser_email||'',
+    '投稿字數':x.char_count??'','句號數':x.period_count??'','標點數':x.punctuation_count??'',
+    '電子報意願':x.newsletter_opt_in||'','著作授權同意':x.copyright_consent||'',
+    '原創聲明':x.originality_declaration||'','最終確認內容':x.final_confirmation||'',
+    '投稿時間':x.submitted_at?new Date(x.submitted_at).toLocaleString('zh-TW',{hour12:false}):'',
+    '來源原始檔':x.source_filename||'','人工審查備註':x.manual_review_note||'',
+    '第二輪預設排序':x.base_position??'','第二輪原始名次':x.base_overall_rank??'',
+    '評審名次加總':x.rank_sum??'','評審總分加總':x.score_sum??'','評審平均分':x.score_average??''
+  }}
+  function originalRegistrationRow(x){return{
+    '投稿時間':x.submitted_at?new Date(x.submitted_at).toLocaleString('zh-TW',{hour12:false}):'',
+    '報名Email':x.submission_email||'','組別':x.group_name||'','類別':x.category||'',
+    '學生姓名':x.student_name||'','學校':x.school||'','班級':x.class_name||'',
+    '學生電話':x.student_phone||'','學生Email':x.student_email||'',
+    '家長姓名':x.parent_name||'','家長電話':x.parent_phone||'','家長Email':x.parent_email||'',
+    '指導老師':x.adviser_name||'','指導老師電話':x.adviser_phone||'','指導老師Email':x.adviser_email||'',
+    '出版社':x.publisher||'','科目一':x.subject_1||'','科目二':x.subject_2||'',
+    '作品名稱':x.title||'','作品內容':x.body||'',
+    '電子報意願':x.newsletter_opt_in||'','著作授權同意':x.copyright_consent||'',
+    '原創聲明':x.originality_declaration||'','最終確認內容':x.final_confirmation||'',
+    '來源原始檔':x.source_filename||''
+  }}
+  function appendSheet(wb,name,list){
+    const ws=XLSX.utils.json_to_sheet(list);
+    ws['!autofilter']={ref:ws['!ref']||'A1:A1'};
+    ws['!cols']=Object.keys(list[0]||{}).map(k=>({wch:k==='作品內容'?72:Math.min(Math.max(k.length+5,12),28)}));
+    XLSX.utils.book_append_sheet(wb,ws,name);
+  }
+  async function exportWinnerRegistry(btn){
+    if(btn){btn.disabled=true;btn.textContent='產生完整清冊…'}
+    try{
+      const {data,error}=await sb.rpc('get_winner_registry_export',{p_project:S.project.id});
+      if(error)throw error;
+      if(!data?.length)throw new Error('目前沒有已確認的正式得獎資料可匯出');
+      if(!(await loadXlsx()))throw new Error('Excel 元件載入失敗');
+
+      const full=data.map(winnerRow);
+      const publicRows=data.map(x=>({
+        '組別':x.group_name||'','獎項':x.award_name||'','學生姓名':x.student_name||'',
+        '學校':x.school||'','班級':x.class_name||'','作品名稱':x.title||'','類別':x.category||''
+      }));
+      const restored=data.map(originalRegistrationRow);
+
+      const wb=XLSX.utils.book_new();
+      appendSheet(wb,'公告得獎名單',publicRows);
+      appendSheet(wb,'完整得獎資料清冊',full);
+      appendSheet(wb,'原始報名資訊還原',restored);
+
+      ['小學組','國中組','高中職組'].forEach(g=>{
+        const list=full.filter(x=>x['組別']===g);
+        if(list.length)appendSheet(wb,g+'得獎清冊',list);
+      });
+
+      const d=new Date(),p=n=>String(n).padStart(2,'0');
+      const file=(S.project.name||'競賽')+'_得獎完整資料清冊_'+d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+'.xlsx';
+      XLSX.writeFile(wb,file);
+      toast('得獎完整資料清冊已產生');
+    }catch(e){toast(e.message||String(e))}
+    finally{if(btn){btn.disabled=false;btn.textContent='下載完整資料清冊 Excel'}}
+  }
   function setHTML(h){app.innerHTML=h;bindCommon()}
   function bindCommon(){document.querySelectorAll('[data-nav]').forEach(b=>b.onclick=()=>go(b.dataset.nav));document.querySelectorAll('[data-logout]').forEach(b=>b.onclick=logout);}
   function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),3200)}
@@ -50,7 +118,12 @@
   async function judgingPage(){const {data:works,error}=await sb.from('judge_submission_view').select('*').eq('project_id',S.project.id).order('group_name').order('anonymous_code');if(error)return shell(`<section class="section"><div class="danger-note">${esc(error.message)}</div></section>`);const {data:scores}=await sb.from('scores').select('*').eq('project_id',S.project.id).eq('judge_user_id',S.user.id);const sm=new Map((scores||[]).map(x=>[x.submission_id,x]));shell(`<section class="section"><h2>評分作業</h2>${(works||[]).length?`<div class="table-wrap"><table><thead><tr><th>編號</th><th>組別</th><th>類別</th><th>作品</th><th>狀態</th><th></th></tr></thead><tbody>${works.map(w=>`<tr><td>${esc(w.anonymous_code)}</td><td>${esc(w.group_name)}</td><td>${esc(w.category)}</td><td>${esc(w.title)}</td><td>${sm.get(w.id)?.status==='locked'?'已完成':'未完成'}</td><td><button class="btn" data-score="${w.id}">評分</button></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">目前沒有分派給你的正式作品。</div>'}</section>`);document.querySelectorAll('[data-score]').forEach(b=>b.onclick=()=>scoreWork(works.find(w=>w.id===b.dataset.score),sm.get(b.dataset.score)))}
   function scoreWork(w,s){const locked=s?.status==='locked';document.body.insertAdjacentHTML('beforeend',`<div class="modal-back" id="modal"><div class="modal"><div class="row" style="justify-content:space-between"><div><span class="badge">${esc(w.anonymous_code)}</span><h2>${esc(w.title)}</h2></div><button class="btn" id="close">關閉</button></div><div class="essay-body">${esc(w.body)}</div><form id="scoreForm" style="margin-top:18px"><div class="grid cards"><label class="card">散文原創性（20）<input class="input" name="originality" type="number" min="0" max="20" step="0.5" value="${s?.originality??''}" ${locked?'disabled':''} required></label><label class="card">文句優美性（20）<input class="input" name="writing" type="number" min="0" max="20" step="0.5" value="${s?.writing??''}" ${locked?'disabled':''} required></label><label class="card">邏輯通順性（20）<input class="input" name="logic" type="number" min="0" max="20" step="0.5" value="${s?.logic??''}" ${locked?'disabled':''} required></label><label class="card">價值啟發性（40）<input class="input" name="inspiration" type="number" min="0" max="40" step="0.5" value="${s?.inspiration??''}" ${locked?'disabled':''} required></label></div><label class="label">評語</label><textarea class="input" name="comment" ${locked?'disabled':''}>${esc(s?.comment||'')}</textarea>${locked?'<div class="note">此作品已完成並鎖定。</div>':'<div class="row" style="margin-top:14px"><button class="btn" type="button" id="saveDraft">儲存草稿</button><button class="btn primary" type="submit">完成並鎖定</button></div>'}</form></div></div>`);document.getElementById('close').onclick=()=>document.getElementById('modal').remove();if(locked)return;async function save(status){const f=new FormData(document.getElementById('scoreForm'));const payload={project_id:S.project.id,submission_id:w.id,judge_user_id:S.user.id,originality:Number(f.get('originality')),writing:Number(f.get('writing')),logic:Number(f.get('logic')),inspiration:Number(f.get('inspiration')),comment:String(f.get('comment')||''),status,submitted_at:status==='locked'?new Date().toISOString():null,updated_at:new Date().toISOString()};const {error}=await sb.from('scores').upsert(payload,{onConflict:'project_id,submission_id,judge_user_id'});if(error)return toast(error.message);await audit(status==='locked'?'完成並鎖定評分':'儲存評分草稿','score',w.id);document.getElementById('modal').remove();judgingPage()}document.getElementById('saveDraft').onclick=()=>save('draft');document.getElementById('scoreForm').onsubmit=e=>{e.preventDefault();if(confirm('完成後將鎖定評分，確定送出？'))save('locked')}}
   async function resultsPage(){const {data:r,error}=await sb.from('overall_ranking_view').select('*').eq('project_id',S.project.id).order('group_name').order('overall_rank');if(error)return shell(`<section class="section"><div class="danger-note">${esc(error.message)}</div></section>`);shell(`<section class="section"><h2>成績與總排名</h2><p class="muted">總名次依各評審個別名次加總，名次加總越小越前面。</p><div class="table-wrap"><table><thead><tr><th>組別</th><th>總名次</th><th>編號</th><th>類別</th><th>名次加總</th><th>評審數</th><th>同分</th></tr></thead><tbody>${(r||[]).map(x=>`<tr><td>${esc(x.group_name)}</td><td>${x.overall_rank}</td><td>${esc(x.anonymous_code)}</td><td>${esc(x.category)}</td><td>${x.rank_sum}</td><td>${x.judge_count}</td><td>${x.is_tie?'是':'否'}</td></tr>`).join('')}</tbody></table></div></section>`)}
-  async function awardsPage(){const {data:a,error}=await sb.from('awards').select('*,submissions(anonymous_code,title,group_name,category)').eq('project_id',S.project.id).order('group_name').order('award_order');if(error)return shell(`<section class="section"><div class="danger-note">${esc(error.message)}</div></section>`);shell(`<section class="section"><h2>得獎名單</h2><p class="muted">得獎名單需由專案管理員最終確認，不會因排名自動發布。</p>${a?.length?`<div class="table-wrap"><table><thead><tr><th>組別</th><th>獎項</th><th>編號</th><th>作品</th></tr></thead><tbody>${a.map(x=>`<tr><td>${esc(x.group_name)}</td><td>${esc(x.award_name)}</td><td>${esc(x.submissions?.anonymous_code||'')}</td><td>${esc(x.submissions?.title||'')}</td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">尚未確認得獎名單。</div>'}</section>`)}
+  async function awardsPage(){
+    const {data:a,error}=await sb.from('awards').select('*,submissions(anonymous_code,title,group_name,category),submission_private:submissions(submission_private(student_name,school,class_name))').eq('project_id',S.project.id).order('group_name').order('award_order');
+    if(error)return shell(`<section class="section"><div class="danger-note">${esc(error.message)}</div></section>`);
+    shell(`<section class="section"><div class="row" style="justify-content:space-between;align-items:flex-start;gap:14px"><div><h2>得獎名單</h2><p class="muted">得獎名單需由專案管理員最終確認，不會因排名自動發布。可下載完整得獎資料清冊，供公告、聯絡與後續核對使用。</p></div><button class="btn primary" id="winnerRegistryExport" ${a?.length?'':'disabled'}>下載完整資料清冊 Excel</button></div><div class="rf4-banner"><b>完整清冊包含三種用途：</b><br>「公告得獎名單」只放公告常用欄位；「完整得獎資料清冊」包含聯絡資料、作品、同意欄位與評選資訊；「原始報名資訊還原」依報名資料邏輯重新排列完整報名欄位。真正的原始 Excel 檔仍可到「原始報表」下載。</div>${a?.length?`<div class="table-wrap"><table><thead><tr><th>組別</th><th>獎項</th><th>姓名</th><th>學校</th><th>編號</th><th>作品</th></tr></thead><tbody>${a.map(x=>{const p=x.submissions?.submission_private?.[0]||{};return`<tr><td>${esc(x.group_name)}</td><td>${esc(x.award_name)}</td><td>${esc(p.student_name||'')}</td><td>${esc(p.school||'')}</td><td>${esc(x.submissions?.anonymous_code||'')}</td><td>${esc(x.submissions?.title||'')}</td></tr>`}).join('')}</tbody></table></div>`:'<div class="empty">尚未確認得獎名單。</div>'}</section>`);
+    document.getElementById('winnerRegistryExport')?.addEventListener('click',e=>exportWinnerRegistry(e.currentTarget));
+  }
   async function settingsPage(){const sr=S.project.screening_rules||{},sc=S.project.scoring_rules||{};shell(`<section class="section"><h2>專案設定</h2><form id="settings"><label class="label">專案名稱</label><input class="input" name="name" value="${esc(S.project.name)}" required><label class="label">專案狀態</label><select class="select" name="status">${['draft','screening','judging','closed','archived'].map(v=>`<option value="${v}" ${S.project.status===v?'selected':''}>${statusLabel(v)}</option>`).join('')}</select><h3>初篩規則</h3><div class="code">${esc(JSON.stringify(sr,null,2))}</div><h3>評分規則</h3><div class="code">${esc(JSON.stringify(sc,null,2))}</div><button class="btn primary" style="margin-top:14px">儲存基本設定</button></form></section>`);document.getElementById('settings').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target),name=String(f.get('name')).trim(),status=String(f.get('status'));const {error}=await sb.from('projects').update({name,status,updated_at:new Date().toISOString()}).eq('id',S.project.id);if(error)return toast(error.message);S.project.name=name;S.project.status=status;await audit('更新專案設定','project',S.project.id,{name,status});toast('已儲存');settingsPage()}}
   async function auditPage(){const {data:logs,error}=await sb.from('audit_logs').select('*').eq('project_id',S.project.id).order('created_at',{ascending:false}).limit(500);if(error)return shell(`<section class="section"><div class="danger-note">${esc(error.message)}</div></section>`);shell(`<section class="section"><h2>操作紀錄</h2><div class="table-wrap"><table><thead><tr><th>時間</th><th>動作</th><th>對象</th><th>詳細資料</th></tr></thead><tbody>${(logs||[]).map(l=>`<tr><td>${fmt(l.created_at)}</td><td>${esc(l.action)}</td><td>${esc((l.entity_type||'')+' '+(l.entity_id||''))}</td><td class="code">${esc(l.details?JSON.stringify(l.details):'—')}</td></tr>`).join('')}</tbody></table></div></section>`)}
   async function project(route){await loadProject(route.projectId);S.page=route.page||'overview';const fn={overview,import:importPage,submissions:submissionsPage,people:peoplePage,judging:judgingPage,results:resultsPage,awards:awardsPage,settings:settingsPage,audit:auditPage}[S.page]||overview;await fn()}
