@@ -70,7 +70,7 @@ function genSecret(){
 async function previewRecipients(){
  const btn=document.getElementById('rfMailPreviewBtn');btn.disabled=true;btn.textContent='載入中…';
  const audience=v('rfMailAudience'),group=v('rfMailGroup')||null,contact=v('rfMailContact');
- const {data,error}=await sb.rpc('get_email_recipient_preview',{p_project:s.project.id,p_audience:audience,p_group:group,p_contact_field:contact});
+ const {data,error}=await sb.rpc('get_email_recipient_preview_v2',{p_project:s.project.id,p_audience:audience,p_group:group,p_contact_field:contact});
  btn.disabled=false;btn.textContent='載入／更新收件名單';
  if(error)return R.toast(error.message);recipients=data||[];renderRecipients();
 }
