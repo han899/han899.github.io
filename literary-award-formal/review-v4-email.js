@@ -140,7 +140,7 @@ async function loadMailHistory(){
  const byBatch=new Map();deliveries.forEach(x=>{if(!byBatch.has(x.batch_id))byBatch.set(x.batch_id,[]);byBatch.get(x.batch_id).push(x)});
  host.innerHTML='<div class="rf-mail-history-list">'+batches.map(b=>{
    const ds=byBatch.get(b.id)||[];
-   const kind=b.test_mode?'測試寄送':b.status==='drafted'?'Gmail 草稿':b.scheduled_for?'正式排程':'正式寄送';
+   const kind=({test_send:'測試寄送',draft:'Gmail 草稿',schedule:'正式排程',send:'正式寄送'}[b.operation_type]|| (b.test_mode?'測試寄送':b.status==='drafted'?'Gmail 草稿':b.scheduled_for?'正式排程':'正式寄送'));
    const badge=b.test_mode?R.badge('測試','warn'):R.badge(kind,b.status==='completed'?'good':'');
    const err=ds.filter(x=>x.status==='failed').length;
    return '<details class="rf-mail-history-card"><summary><div>'+badge+' <b>'+R.esc(b.subject_template||'（無主旨）')+'</b><div class="muted tiny">'+R.esc(R.fmt(b.created_at))+'｜'+R.esc(b.test_group_name?('測試群組：'+b.test_group_name):(b.group_name||'全部組別'))+'｜'+b.recipient_count+' 封｜'+R.esc(fmtStatus(b.status))+(err?'｜失敗 '+err:'')+'</div></div><span>展開紀錄</span></summary><div class="rf-mail-history-body"><details><summary>查看本批信件內容</summary><div class="rf-mail-history-copy"><b>主旨</b><div>'+R.esc(b.subject_template||'')+'</div><b>內容</b><pre>'+R.esc(b.body_template||'')+'</pre></div></details><div class="table-wrap"><table><thead><tr><th>收件人</th><th>Email</th><th>狀態</th><th>交寄／排程時間</th><th>錯誤</th></tr></thead><tbody>'+ds.map(d=>'<tr><td>'+R.esc(d.recipient_name||'—')+'</td><td>'+R.esc(d.recipient_email)+'</td><td>'+R.esc(fmtStatus(d.status))+'</td><td>'+R.esc(d.sent_at?R.fmt(d.sent_at):d.scheduled_for?R.fmt(d.scheduled_for):'—')+'</td><td>'+R.esc(d.error_message||'—')+'</td></tr>').join('')+'</tbody></table></div></div></details>';
@@ -272,7 +272,7 @@ async function loadScheduled(){
  try{
   const out=await callProvider({action:'scheduled'});scheduledJobs=out.jobs||[];
   if(out.remaining_daily_quota!==undefined)service.remaining_daily_quota=out.remaining_daily_quota;
-  renderScheduled();
+  renderScheduled();loadMailHistory();
  }catch(e){
   const h=document.getElementById('rfMailScheduled');if(h)h.innerHTML='<div class="danger-note">'+R.esc(e.message||String(e))+'</div>';
  }
