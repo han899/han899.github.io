@@ -84,8 +84,52 @@ function renderReviewBundle(bundle){
 function bindReviewControls(root){
  root.querySelectorAll('[data-rf-review-toggle]').forEach(b=>b.onclick=()=>root.querySelectorAll('.rf-admin-review-card').forEach(d=>d.open=b.dataset.rfReviewToggle==='1'));
 }
+function splitStorageKey(id){return 'literary-admin-review-split:'+String(s.project?.id||'')+':'+String(id)}
+function getSplitRatio(id){
+ const v=Number(localStorage.getItem(splitStorageKey(id)));
+ return Number.isFinite(v)&&v>=32&&v<=74?v:58;
+}
+function setSplitRatio(layout,id,value,save=true){
+ const pct=Math.min(74,Math.max(32,Number(value)||58));
+ layout?.style.setProperty('--rf-admin-reading-width',pct+'%');
+ layout?.setAttribute('data-split',String(Math.round(pct)));
+ if(save)try{localStorage.setItem(splitStorageKey(id),String(pct))}catch{}
+ return pct;
+}
+function bindSplitControls(root,id){
+ const layout=root.querySelector('.rf-admin-review-layout'),bar=root.querySelector('.rf-admin-splitter');
+ if(!layout)return;
+ let ratio=setSplitRatio(layout,id,getSplitRatio(id),false);
+ root.querySelectorAll('[data-rf-split-preset]').forEach(b=>b.onclick=()=>{
+  ratio=setSplitRatio(layout,id,Number(b.dataset.rfSplitPreset),true);
+  root.querySelectorAll('[data-rf-split-preset]').forEach(x=>x.classList.toggle('primary',x===b));
+ });
+ if(!bar)return;
+ const move=e=>{
+  const rect=layout.getBoundingClientRect();
+  if(!rect.width)return;
+  ratio=setSplitRatio(layout,id,((e.clientX-rect.left)/rect.width)*100,true);
+ };
+ bar.onpointerdown=e=>{
+  if(matchMedia('(max-width:1050px)').matches)return;
+  e.preventDefault();bar.setPointerCapture?.(e.pointerId);document.body.classList.add('rf-admin-resizing');
+  const onMove=ev=>move(ev);
+  const stop=()=>{bar.removeEventListener('pointermove',onMove);bar.removeEventListener('pointerup',stop);bar.removeEventListener('pointercancel',stop);document.body.classList.remove('rf-admin-resizing')};
+  bar.addEventListener('pointermove',onMove);bar.addEventListener('pointerup',stop);bar.addEventListener('pointercancel',stop);
+ };
+ bar.onkeydown=e=>{
+  if(!['ArrowLeft','ArrowRight'].includes(e.key))return;
+  e.preventDefault();ratio=setSplitRatio(layout,id,ratio+(e.key==='ArrowRight'?2:-2),true);
+ };
+}
+function finalBrowseState(id,opts){
+ const rows=Array.isArray(opts?.finalRows)?opts.finalRows.filter(x=>x?.submission_id):[];
+ const index=rows.findIndex(x=>String(x.submission_id)===String(id));
+ return{rows,index,prev:index>0?rows[index-1]:null,next:index>=0&&index<rows.length-1?rows[index+1]:null};
+}
 async function openWork(id,opts={}){
  if(!isSystemAdmin())return R.toast('僅限系統管理員與專案管理員檢視作品與評審內容');
+ const browse=finalBrowseState(id,opts);
  const md=R.modal('<div class="rf-admin-review-loading"><b>正在載入作品與完整評審紀錄…</b><div class="muted tiny">請稍候，系統正在整合第一輪、第二輪與評語內容。</div></div>');
  const modal=md.querySelector('.modal');modal?.classList.add('rf-admin-review-modal');
  const {data,error}=await sb.rpc('get_admin_review_work',{p_project:s.project.id,p_submission:id});
@@ -104,10 +148,20 @@ async function openWork(id,opts={}){
  const finalRow=opts?.finalRow;
  const finalMeta=finalRow?'<div class="rf-admin-final-meta"><span>目前最終排序 <b>#'+R.esc(finalRow.final_position??'—')+'</b></span><span>第二輪原始名次 <b>#'+R.esc(finalRow.base_overall_rank??'—')+'</b></span><span>名次加總 <b>'+R.esc(finalRow.rank_sum??'—')+'</b></span><span>總分加總 <b>'+R.esc(finalRow.score_sum??'—')+'</b></span><span>平均分 <b>'+R.esc(finalRow.score_average==null?'—':Number(finalRow.score_average).toFixed(2))+'</b></span></div>':'';
  const text=['組別：'+(x.group_name||''),'匿名編號：'+(x.anonymous_code||''),'類別：'+(x.category||''),'作品名稱：'+(x.title||''),'字數：'+(x.char_count??'—'),'',x.body||''].join('\n');
- modal.innerHTML='<div class="rf-admin-work-head"><div><div class="rf4-statusline">'+R.badge(x.group_name||'')+R.badge(x.anonymous_code||'')+R.badge(x.category||'')+'</div><h2>'+R.esc(x.title||'未命名作品')+'</h2><div class="muted">字數 '+R.esc(x.char_count??'—')+'｜句號 '+R.esc(x.period_count??'—')+'｜標點 '+R.esc(x.punctuation_count??'—')+'</div>'+finalMeta+'</div><div class="rf4-actions"><button class="btn" id="rfAdminWorkDownload">下載此作品 TXT</button><button class="btn" id="rfAdminWorkClose">關閉</button></div></div><div class="rf-admin-review-layout"><section class="rf-admin-reading-pane"><div class="rf-admin-pane-title"><b>作品全文</b><span class="muted tiny">獨立閱讀區</span></div><article class="rf-final-work-body">'+R.esc(x.body||'').replace(/\n/g,'<br>')+'</article></section><aside class="rf-admin-review-pane">'+reviewHtml+'</aside></div>';
+ const browseHtml=browse.index>=0?'<div class="rf-admin-browsebar"><div class="rf-admin-browse-nav"><button class="btn" data-rf-browse-prev '+(browse.prev?'':'disabled')+'>← 上一篇</button><div class="rf-admin-browse-count"><b>第 '+(browse.index+1)+' / '+browse.rows.length+' 篇</b><span>'+R.esc(x.anonymous_code||'')+'</span></div><button class="btn" data-rf-browse-next '+(browse.next?'':'disabled')+'>下一篇 →</button></div><div class="rf-admin-split-presets"><span class="muted tiny">閱讀比例</span><button class="btn tiny" data-rf-split-preset="68">作品較寬</button><button class="btn tiny" data-rf-split-preset="58">平衡</button><button class="btn tiny" data-rf-split-preset="42">評審較寬</button><span class="muted tiny rf-admin-browse-hint">可拖曳中線調整｜Alt＋←/→ 切換</span></div></div>':'<div class="rf-admin-browsebar rf-admin-browsebar-single"><div class="rf-admin-split-presets"><span class="muted tiny">閱讀比例</span><button class="btn tiny" data-rf-split-preset="68">作品較寬</button><button class="btn tiny" data-rf-split-preset="58">平衡</button><button class="btn tiny" data-rf-split-preset="42">評審較寬</button><span class="muted tiny">可拖曳中線調整，每篇作品會各自記住比例</span></div></div>';
+ modal.innerHTML='<div class="rf-admin-work-head"><div><div class="rf4-statusline">'+R.badge(x.group_name||'')+R.badge(x.anonymous_code||'')+R.badge(x.category||'')+'</div><h2>'+R.esc(x.title||'未命名作品')+'</h2><div class="muted">字數 '+R.esc(x.char_count??'—')+'｜句號 '+R.esc(x.period_count??'—')+'｜標點 '+R.esc(x.punctuation_count??'—')+'</div>'+finalMeta+'</div><div class="rf4-actions"><button class="btn" id="rfAdminWorkDownload">下載此作品 TXT</button><button class="btn" id="rfAdminWorkClose">關閉</button></div></div>'+browseHtml+'<div class="rf-admin-review-layout"><section class="rf-admin-reading-pane"><div class="rf-admin-pane-title"><b>作品全文</b><span class="muted tiny">獨立閱讀區</span></div><article class="rf-final-work-body">'+R.esc(x.body||'').replace(/\n/g,'<br>')+'</article></section><div class="rf-admin-splitter" role="separator" aria-label="調整作品與評審欄位寬度" aria-orientation="vertical" tabindex="0"><span></span></div><aside class="rf-admin-review-pane">'+reviewHtml+'</aside></div>';
  modal.querySelector('#rfAdminWorkClose').onclick=R.closeModal;
  modal.querySelector('#rfAdminWorkDownload').onclick=()=>saveBlob(new Blob(['\ufeff'+text],{type:'text/plain;charset=utf-8'}),safeName(x.group_name)+'_'+safeName(x.anonymous_code)+'_'+safeName(x.title)+'.txt');
- bindReviewControls(modal);
+ bindReviewControls(modal);bindSplitControls(modal,id);
+ const go=row=>row&&openWork(row.submission_id,{finalRow:row,finalRows:browse.rows});
+ modal.querySelector('[data-rf-browse-prev]')?.addEventListener('click',()=>go(browse.prev));
+ modal.querySelector('[data-rf-browse-next]')?.addEventListener('click',()=>go(browse.next));
+ md.tabIndex=-1;md.focus();
+ md.onkeydown=e=>{
+  if(!e.altKey)return;
+  if(e.key==='ArrowLeft'&&browse.prev){e.preventDefault();go(browse.prev)}
+  if(e.key==='ArrowRight'&&browse.next){e.preventDefault();go(browse.next)}
+ };
 }
 async function downloadStage(stage,group=null,button=null){
  if(!isSystemAdmin())return R.toast('僅限專案管理員批次下載作品');
