@@ -72,3 +72,23 @@ body.rf4-global-nav-active .main{width:100%;min-width:0}
 
 @media(max-width:1050px){.rf4-fast-layout{grid-template-columns:1fr;padding:12px;gap:12px}.rf4-fast-side{position:static}.rf4-fast-reading{padding:18px}.rf4-fast-top{padding:10px 12px}.rf4-fast-top-actions .muted{display:none}.rf4-fast-progress{top:58px}body.rf4-global-nav-active .layout{margin-left:0}.rf4-global-nav{left:10px;right:10px;bottom:10px;top:auto;width:auto;max-height:none;overflow-x:auto;overflow-y:hidden;padding:7px;border-radius:18px}.rf4-global-nav-inner{display:flex;align-items:stretch;gap:6px;width:max-content;min-width:100%}.rf4-nav-section{display:flex;align-items:stretch;gap:5px;padding:0!important;border:0!important}.rf4-nav-section-title{display:none}.rf4-nav-group{display:flex;align-items:stretch;gap:4px;padding:4px;background:rgba(245,248,255,.72)}.rf4-nav-group-title{display:flex;align-items:center;padding:0 7px;white-space:nowrap;font-size:11px}.rf4-global-nav-btn{width:auto;min-width:max-content;justify-content:center;padding:8px 10px;white-space:nowrap;text-align:center}.rf4-global-nav-btn small{display:none}.rf4-global-nav-btn.active{box-shadow:none;background:#203a73;color:#fff}body.rf4-global-nav-active .page{padding-bottom:84px}}
 @media(max-width:700px){.rf4-score-grid{grid-template-columns:1fr}.rf4-sticky{bottom:84px}.rf4-actions .btn{flex:1 1 auto}.review-v4-pending .main{min-height:55vh}.rf4-task-row{align-items:flex-start;flex-direction:column}.rf4-task-row .btn{width:100%}.rf4-task-context{padding:15px}.rf4-assignment-line{display:block}.rf4-assignment-line>b{display:block;margin-bottom:5px}.rf4-quick-entry{align-items:flex-start;flex-direction:column}.rf4-quick-entry .btn{width:100%}.rf4-fast-title{font-size:1.35rem}.rf4-fast-essay{font-size:1rem;line-height:1.82}.rf4-fast-reading{border-radius:14px}.rf4-fast-side{border-radius:14px;padding:15px}.rf4-fast-score-row{grid-template-columns:minmax(0,1fr) 96px}.rf4-fast-big-actions,.rf4-fast-nav{grid-template-columns:1fr}.rf4-fast-top-actions .btn{padding-left:10px;padding-right:10px}.rf4-global-nav{left:7px;right:7px;bottom:7px}}
+
+
+/* 最終審查獎項從缺設定 */
+.rf-final-award-config{margin:14px 0 18px;padding:16px;border-radius:18px;background:rgba(247,249,255,.9);border:1px solid rgba(93,110,145,.12)}
+.rf-final-award-config-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:12px}
+.rf-final-award-config-head h3{margin:0 0 5px}
+.rf-final-award-config-head p{margin:0;line-height:1.55}
+.rf-final-award-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.rf-final-award-group{background:rgba(255,255,255,.9);border:1px solid rgba(96,112,139,.11);border-radius:14px;padding:11px}
+.rf-final-award-group-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
+.rf-final-award-group-head span{font-size:12px;color:#718096}
+.rf-final-award-slots{display:grid;gap:7px}
+.rf-final-award-slot{display:flex;justify-content:space-between;align-items:center;gap:9px;padding:8px 9px;border-radius:11px;background:#f7f9fd}
+.rf-final-award-slot.vacant{background:#fff1f4;box-shadow:inset 0 0 0 1px rgba(175,56,82,.12)}
+.rf-final-award-slot.empty{opacity:.7}
+.rf-final-award-slot b{display:block;font-size:13px}
+.rf-final-award-slot small{display:block;margin-top:2px;color:#718096;font-size:10px}
+.rf-final-award-slot .btn{padding:7px 9px;min-width:58px}
+@media(max-width:1100px){.rf-final-award-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){.rf-final-award-grid{grid-template-columns:1fr}.rf-final-award-config-head{flex-direction:column}}
