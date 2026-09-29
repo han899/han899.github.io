@@ -58,6 +58,7 @@ async function callProvider(payload){
  const out=await r.json().catch(()=>({}));if(!r.ok)throw new Error(out.error||'Gmail 操作失敗');return out;
 }
 function varsFor(x){return{
+ project_name:s.project?.name||'',
  name:x.recipient_name||'',student_name:x.recipient_name||'',group_name:x.group_name||'',title:x.title||'',
  final_position:x.final_position||'',award_name:x.award_name||'',anonymous_code:x.anonymous_code||''
 }}
@@ -215,13 +216,24 @@ async function saveTemplate(){
  if(error)return R.toast(error.message);R.toast('範本已儲存');await R.pages.emailCenter();
 }
 function operationRecipients(testMode){
- const list=selected();if(!list.length)throw new Error('請先載入正式收件名單，並至少勾選一位作為測試變數範例');
- if(!testMode)return list;
- const gid=v('rfMailTestGroupSelect');
- const group=testGroups.find(g=>g.id===gid);if(!group)throw new Error('請先選擇測試收件人群組');
- const testers=Array.isArray(group.recipients)?group.recipients:[];if(!testers.length)throw new Error('這個測試群組沒有收件人');
- const sample=list[0],sampleVars=varsFor(sample);
- return testers.map(t=>({...sample,submission_id:null,recipient_email:t.email,recipient_name:t.name||t.email,recipient_type:'test',_variables:sampleVars}));
+ if(testMode){
+   const gid=v('rfMailTestGroupSelect');
+   const group=testGroups.find(g=>g.id===gid);if(!group)throw new Error('請先選擇測試收件人群組');
+   const testers=Array.isArray(group.recipients)?group.recipients:[];if(!testers.length)throw new Error('這個測試群組沒有收件人');
+   return testers.map(t=>{
+     const name=t.name||t.email;
+     return {
+       submission_id:null,recipient_email:t.email,recipient_name:name,recipient_type:'test',
+       group_name:'',title:'',final_position:'',award_name:'',anonymous_code:'',
+       _variables:{
+         project_name:s.project?.name||'',
+         name,student_name:name,group_name:'',title:'',final_position:'',award_name:'',anonymous_code:''
+       }
+     };
+   });
+ }
+ const list=selected();if(!list.length)throw new Error('請先載入正式收件名單，並至少勾選一位正式收件人');
+ return list;
 }
 async function perform(mode,testMode=false){
  if(!service.configured)throw new Error('Gmail 尚未連線，請先完成上方免費 Gmail 串接');
@@ -325,9 +337,9 @@ R.pages.emailCenter=async function(){
  '<section class="section rf-gmail-setup"><details '+(connected?'':'open')+'><summary><b>Gmail 免費串接設定</b> <span class="muted">（第一次設定才需要）</span></summary><div class="rf-gmail-steps"><ol><li>到 <a href="https://script.google.com/" target="_blank" rel="noopener">Google Apps Script</a> 建立新專案。</li><li>把本系統提供的 <code>gmail-appscript-bridge.gs</code> 貼入 <code>Code.gs</code>。</li><li>Apps Script「專案設定 → 指令碼屬性」新增 <code>BRIDGE_SECRET</code>，值要和下方連線密鑰完全相同。</li><li>在 Apps Script 手動執行一次 <code>authorizeGmailBridge()</code> 並授權 Gmail。</li><li>部署為「網頁應用程式」：執行身分選「我」，存取權限選「任何人」。</li><li>把部署後以 <code>/exec</code> 結尾的網址貼回下方。這一步只檢查連線，不會寄信。</li></ol><div class="rf4-actions"><button class="btn" id="rfGmailCopyCode">複製 Apps Script 程式碼</button><a class="btn" href="./gmail-appscript-bridge.gs?v=20260928a" download>下載 Apps Script 程式碼</a><a class="btn" href="./GMAIL_FREE_SETUP.md?v=20260928a" target="_blank">完整設定說明</a></div></div><div class="split" style="margin-top:14px"><div><label class="label">Apps Script Web App URL</label><input class="input" id="rfGmailWebApp" placeholder="https://script.google.com/macros/s/.../exec"><div class="muted tiny">'+(integration?.configured?'目前已設定：'+R.esc(integration.web_app_url||'已隱藏'):'尚未設定')+'</div></div><div><label class="label">連線密鑰（不是 Gmail 密碼）</label><div class="rf-gmail-secret-row"><input class="input" id="rfGmailSecret" type="password" autocomplete="new-password" placeholder="產生或貼上至少 32 字元的隨機密鑰"><button class="btn" id="rfGmailGenerate">產生並複製</button></div><div class="muted tiny">已儲存的密鑰不會再回傳到瀏覽器。</div></div></div><div class="rf4-actions" style="margin-top:12px"><button class="btn primary" id="rfGmailSave">儲存並測試連線</button>'+(integration?.configured?'<button class="btn danger" id="rfGmailDisconnect">解除 Gmail 串接</button>':'')+'</div><div id="rfGmailSetupMsg"></div></details></section>'+
  '<section class="section"><div class="rf-mail-section-head"><div><h3>測試收件人群組</h3><p class="muted">測試模式只能寄給這裡事先設定的 Email，不會寄到正式參賽者。</p></div><button class="btn primary" id="rfMailAddTestGroup">＋ 新增測試群組</button></div><div id="rfMailTestGroupList"></div></section>'+
  '<section class="section"><h3>寄件設定</h3><div class="split"><div><label class="label">寄件顯示名稱</label><input class="input" id="rfMailSenderName" value="'+R.esc(settings.sender_name||s.project.name||'')+'"></div><div><label class="label">回覆信箱 Reply-To</label><input class="input" id="rfMailReplyTo" type="email" value="'+R.esc(settings.reply_to||'')+'"></div></div><button class="btn" id="rfMailSaveSettings" style="margin-top:12px">儲存寄件設定</button></section>'+
- '<section class="section"><h3>1. 選擇正式收件人</h3><div class="filters"><select class="select" id="rfMailAudience"><option value="winners">最終得獎者</option><option value="finalists">第二輪入圍者</option><option value="all_formal">所有正式投稿者</option><option value="judges">目前啟用中的評審</option></select><select class="select" id="rfMailGroup"><option value="">全部組別</option><option>小學組</option><option>國中組</option><option>高中職組</option></select><select class="select" id="rfMailContact"><option value="auto">自動選擇聯絡信箱</option><option value="submission_email">報名 Email</option><option value="parent_email">家長 Email</option><option value="student_email">學生 Email</option><option value="adviser_email">指導老師 Email</option></select><button class="btn primary" id="rfMailPreviewBtn">載入／更新收件名單</button></div><div id="rfMailRecipients" style="margin-top:14px"><div class="empty">先選擇正式寄送對象，再載入實際收件名單。測試信會使用其中第一位的變數內容作為預覽範例，但只寄到測試群組。</div></div></section>'+
+ '<section class="section"><h3>1. 選擇正式收件人</h3><div class="filters"><select class="select" id="rfMailAudience"><option value="winners">最終得獎者</option><option value="finalists">第二輪入圍者</option><option value="all_formal">所有正式投稿者</option><option value="judges">目前啟用中的評審</option></select><select class="select" id="rfMailGroup"><option value="">全部組別</option><option>小學組</option><option>國中組</option><option>高中職組</option></select><select class="select" id="rfMailContact"><option value="auto">自動選擇聯絡信箱</option><option value="submission_email">報名 Email</option><option value="parent_email">家長 Email</option><option value="student_email">學生 Email</option><option value="adviser_email">指導老師 Email</option></select><button class="btn primary" id="rfMailPreviewBtn">載入／更新收件名單</button></div><div id="rfMailRecipients" style="margin-top:14px"><div class="empty">正式寄送時才需要先載入這裡的實際收件名單；寄送測試信不需要載入正式名單。</div></div></section>'+
  '<section class="section"><h3>2. 編輯郵件</h3><div class="row" style="gap:8px;flex-wrap:wrap"><select class="select" id="rfMailTemplate">'+tplOptions+'</select><button class="btn" id="rfMailSaveTemplate">另存為範本</button></div><div class="rf-mail-vars"><b>可用變數：</b> {{project_name}}、{{name}}、{{student_name}}、{{group_name}}、{{title}}、{{final_position}}、{{award_name}}、{{anonymous_code}}</div><label class="label">郵件主旨</label><input class="input" id="rfMailSubject" placeholder="例如：{{project_name}}－{{award_name}}通知"><label class="label">郵件內容</label><textarea class="input rf-mail-body" id="rfMailBody" rows="12" placeholder="您好 {{student_name}}：&#10;&#10;恭喜您的作品「{{title}}」…"></textarea></section>'+
- '<section class="section rf-mail-test-section"><h3>3. 先寄測試信</h3><p class="muted">選擇測試群組後，系統會以目前正式名單中第一位勾選者的變數資料渲染信件，但實際收件地址只會是測試群組。</p><div class="rf-mail-test-row"><select class="select" id="rfMailTestGroupSelect"></select><button class="btn primary" id="rfMailTest" '+(connected?'':'disabled')+'>寄送目前版本測試信</button></div><div id="rfMailSafetyStatus"></div></section>'+
+ '<section class="section rf-mail-test-section"><h3>3. 先寄測試信</h3><p class="muted">測試寄送完全獨立於正式收件名單，只會寄到你選擇的測試群組。測試群組成員姓名會套用到姓名變數；作品名稱、獎項、名次等參賽者專屬變數在測試信中會留白。</p><div class="rf-mail-test-row"><select class="select" id="rfMailTestGroupSelect"></select><button class="btn primary" id="rfMailTest" '+(connected?'':'disabled')+'>寄送目前版本測試信</button></div><div id="rfMailSafetyStatus"></div></section>'+
  '<section class="section"><h3>4. 草稿、排程與正式寄送</h3><div class="rf-mail-operation-grid"><div class="rf-mail-op"><b>先存 Gmail 草稿</b><p class="muted tiny">草稿不會寄出，因此不需要先通過測試；可直接到 Gmail 草稿匣檢查。</p><button class="btn" id="rfMailDraft" '+(connected?'':'disabled')+'>建立 Gmail 草稿</button></div><div class="rf-mail-op"><b>正式排程寄出</b><p class="muted tiny">只有目前版本成功寄過測試信後才可建立正式排程。</p><input class="input" id="rfMailScheduleAt" type="datetime-local"><button class="btn primary" id="rfMailSchedule" disabled>建立正式排程</button></div><div class="rf-mail-op"><b>立即正式寄出</b><p class="muted tiny">目前版本需先通過測試；正式寄出前還會再顯示一次收件人數確認。</p><button class="btn primary" id="rfMailSend" disabled>立即正式寄出</button></div></div><div class="rf4-banner" style="margin-top:12px">只要修改主旨、內文、寄件名稱、Reply-To、正式寄送對象類型／組別／聯絡欄位，正式寄送就會重新鎖定，必須再寄一次測試信。</div></section>'+
  '<section class="section"><h3>Gmail 排程</h3><div id="rfMailScheduled">'+(connected?'<div class="empty">正在讀取 Gmail 排程…</div>':'<div class="empty">完成 Gmail 串接後才會顯示排程。</div>')+'</div></section>'+
  '<section class="section"><div class="rf-mail-section-head"><div><h3>完整交寄紀錄</h3><p class="muted">包含測試信、Gmail 草稿、排程、正式寄送，以及每位收件人的成功、失敗、時間與錯誤原因。</p></div><button class="btn" id="rfMailRefreshHistory">重新整理紀錄</button></div><div id="rfMailHistory"><div class="empty">正在讀取紀錄…</div></div></section>');
