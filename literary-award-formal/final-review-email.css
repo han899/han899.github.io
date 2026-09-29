@@ -62,3 +62,10 @@
  .rf-mail-test-row .btn{width:100%}
  .rf-mail-history-card>summary{align-items:flex-start;flex-direction:column}
 }
+
+
+/* Apps Script 部署診斷 */
+.rf-mail-deploy-help{margin-top:10px;padding:11px 12px;border-radius:12px;background:rgba(255,255,255,.72);line-height:1.55}
+.rf-mail-deploy-help ol{margin:7px 0 0 1.2rem;padding:0}
+.rf-mail-deploy-help li{margin:5px 0}
+.rf-mail-deploy-help code{padding:1px 5px;border-radius:6px;background:rgba(70,85,115,.08)}
