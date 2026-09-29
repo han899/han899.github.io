@@ -150,6 +150,9 @@ async function loadMailHistory(){
 async function saveGmailIntegration(){
  const url=v('rfGmailWebApp').trim(),secret=v('rfGmailSecret').trim(),msg=document.getElementById('rfGmailSetupMsg'),btn=document.getElementById('rfGmailSave');
  if(!url||!secret){msg.innerHTML='<div class="danger-note">請填入 Apps Script Web App 網址與同一組連線密鑰。</div>';return}
+ if(!/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec(?:[?#].*)?$/i.test(url)){
+   msg.innerHTML='<div class="danger-note"><b>Web App 網址格式不正確。</b><br>請使用 Apps Script「部署 → 管理部署作業」中正式 Web app 的網址，必須是 <code>https://script.google.com/macros/s/.../exec</code>；不要貼部署 ID、編輯器網址或 <code>/dev</code> 測試網址。</div>';return;
+ }
  btn.disabled=true;btn.textContent='儲存並測試中…';
  const {error}=await sb.rpc('set_gmail_integration',{p_project:s.project.id,p_web_app_url:url,p_shared_secret:secret});
  if(error){msg.innerHTML='<div class="danger-note">'+R.esc(error.message)+'</div>';btn.disabled=false;btn.textContent='儲存並測試連線';return}
@@ -158,7 +161,11 @@ async function saveGmailIntegration(){
    msg.innerHTML='<div class="rf4-banner good"><b>Gmail 連線成功</b><br>'+R.esc(st.gmail_address||'已授權 Gmail')+'｜今日剩餘寄送額度 '+R.esc(st.remaining_daily_quota??'—')+'</div>';
    setTimeout(()=>R.pages.emailCenter(),700);
  }else{
-   msg.innerHTML='<div class="danger-note"><b>設定已保存，但 Gmail 測試尚未成功。</b><br>'+R.esc(st.error||'請確認 Apps Script 部署、權限與連線密鑰。')+'</div>';
+   const err=String(st.error||'請確認 Apps Script 部署、權限與連線密鑰。');
+   const deployHelp=/404|部署已失效|網址不存在/i.test(err)
+     ?'<div class="rf-mail-deploy-help"><b>請重新建立／確認 Apps Script Web App 部署：</b><ol><li>Apps Script →「部署」→「管理部署作業」；若目前 Web app 已封存或網址不同，請新增部署。</li><li>類型選「Web app」，執行身分選「我／部署者」。</li><li>存取權限必須允許未登入使用者存取（一般個人帳號通常顯示「任何人」）。</li><li>複製新的 <code>/exec</code> 網址。先用無痕視窗開啟；正常時應看到 Gmail Bridge 的 JSON，而不是 404 或 Google 登入頁。</li><li>把新的 <code>/exec</code> 網址貼回這裡，連線密鑰維持和 Apps Script 指令碼屬性 <code>BRIDGE_SECRET</code> 相同。</li></ol></div>'
+     :'';
+   msg.innerHTML='<div class="danger-note"><b>設定已保存，但 Gmail 測試尚未成功。</b><br>'+R.esc(err)+deployHelp+'</div>';
    btn.disabled=false;btn.textContent='儲存並測試連線';
  }
 }
