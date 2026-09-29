@@ -22,7 +22,7 @@ function generalItems(role){
  let h='<div class="rf4-nav-section"><div class="rf4-nav-section-title">專案</div>';
  h+=btn('overview','專案總覽');
  if(admin||staff)h+=btn('import','作品匯入')+btn('submissions','作品管理');
- if(admin)h+=btn('sourceReports','原始報表','', 'Excel 檢視與原檔下載');
+ if(admin)h+=btn('sourceReports','原始報表','', '原檔線上檢視與下載');
  if(admin)h+=btn('people','成員與權限');
  h+='</div>';return h;
 }
