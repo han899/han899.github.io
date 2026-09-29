@@ -6,3 +6,69 @@
 .rf-admin-work-head h2{margin:7px 0 5px}
 .rf-admin-download-actions{display:flex;justify-content:flex-end;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0}
 @media(max-width:760px){.rf-admin-work-head{flex-direction:column}.rf-admin-work-head .rf4-actions,.rf-admin-download-actions{width:100%}.rf-admin-download-actions .btn{flex:1 1 100%}}
+
+
+/* 2026-09-29 完整評審內容檢視 */
+.rf-admin-review-modal{width:min(1360px,100%);height:min(92vh,980px);max-height:92vh;overflow:hidden;display:flex;flex-direction:column;padding:20px}
+.rf-admin-review-loading{display:grid;gap:7px;place-content:center;min-height:260px;text-align:center}
+.rf-admin-work-head{flex:0 0 auto;padding-bottom:13px;border-bottom:1px solid rgba(93,110,145,.13)}
+.rf-admin-final-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.rf-admin-final-meta span{background:rgba(242,246,255,.9);border:1px solid rgba(101,117,154,.1);border-radius:10px;padding:7px 9px;font-size:12px;color:#5e6f8c}
+.rf-admin-final-meta b{color:#26344d}
+.rf-admin-review-layout{display:grid;grid-template-columns:minmax(0,1.18fr) minmax(390px,.82fr);gap:14px;min-height:0;flex:1;overflow:hidden;padding-top:14px}
+.rf-admin-reading-pane,.rf-admin-review-pane{min-height:0;overflow:auto;scrollbar-gutter:stable}
+.rf-admin-reading-pane{padding:0 12px 18px 2px;border-right:1px solid rgba(93,110,145,.1)}
+.rf-admin-review-pane{padding:0 3px 18px 2px}
+.rf-admin-pane-title{position:sticky;top:0;z-index:2;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:4px 0 10px;background:linear-gradient(#f9fbff 72%,rgba(249,251,255,.88),rgba(249,251,255,0))}
+.rf-admin-reading-pane .rf-final-work-body{font-family:"Noto Serif TC","Songti TC",serif;font-size:17px;line-height:1.95;color:#2d3547;max-width:78ch;margin:0 auto;padding:12px 6px 30px}
+.rf-admin-review-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.rf-admin-review-summary>div{background:rgba(244,247,255,.92);border:1px solid rgba(100,116,139,.1);border-radius:13px;padding:10px 11px}
+.rf-admin-review-summary span{display:block;color:#718096;font-size:11px;font-weight:800}
+.rf-admin-review-summary b{display:block;margin-top:3px;font-size:20px;color:#26344d}
+.rf-admin-review-toolbar{position:sticky;top:0;z-index:3;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:8px 0 10px;background:linear-gradient(#f9fbff 78%,rgba(249,251,255,.88),rgba(249,251,255,0))}
+.rf-admin-review-toolbar h3{margin:0 0 2px;font-size:16px}
+.rf-admin-review-card{border:1px solid rgba(96,112,139,.14);background:rgba(255,255,255,.84);border-radius:15px;margin:9px 0;overflow:hidden}
+.rf-admin-review-card>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 13px}
+.rf-admin-review-card>summary::-webkit-details-marker{display:none}
+.rf-admin-review-card>summary:hover{background:rgba(243,247,255,.8)}
+.rf-admin-review-card[open]>summary{border-bottom:1px solid rgba(96,112,139,.1)}
+.rf-admin-review-card-score{display:flex;align-items:baseline;gap:6px;white-space:nowrap}
+.rf-admin-review-card-score span{font-size:11px;color:#718096}
+.rf-admin-review-card-score b{font-size:22px}
+.rf-admin-review-card-body{padding:10px}
+.rf-admin-review-round{background:rgba(247,249,253,.88);border-radius:12px;padding:11px;margin:0 0 9px}
+.rf-admin-review-round:last-child{margin-bottom:0}
+.rf-admin-round-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}
+.rf-admin-kv-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.rf-admin-kv-grid>div{background:#fff;border-radius:10px;padding:8px 9px}
+.rf-admin-kv-grid span{display:block;color:#718096;font-size:11px}
+.rf-admin-kv-grid b{display:block;margin-top:2px;font-size:13px}
+.rf-admin-score-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.rf-admin-score-item{display:flex;justify-content:space-between;gap:8px;align-items:center;background:#fff;border-radius:10px;padding:8px 9px;font-size:12px}
+.rf-admin-score-item span{color:#65728b}
+.rf-admin-r2-total{display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;gap:6px 9px;margin-top:8px;padding:8px 9px;background:#edf3ff;border-radius:10px}
+.rf-admin-r2-total span{font-size:11px;color:#65728b}
+.rf-admin-r2-total strong{font-size:16px}
+.rf-admin-comment{margin-top:8px;background:#fff;border:1px solid rgba(96,112,139,.1);border-radius:10px;padding:9px 10px}
+.rf-admin-comment p{margin:4px 0 0;line-height:1.65;white-space:normal;word-break:break-word}
+.rf-admin-review-time{margin-top:7px;line-height:1.5}
+.rf-admin-round-note{margin:7px 0 0;line-height:1.45}
+.rf-admin-empty-inline,.rf-admin-review-empty{color:#718096;background:rgba(247,249,253,.92);border-radius:11px;padding:10px 11px;line-height:1.5}
+.rf-admin-review-empty{padding:28px 15px;text-align:center}
+@media(max-width:1050px){
+ .rf-admin-review-modal{height:auto;max-height:92vh;overflow:auto}
+ .rf-admin-review-layout{grid-template-columns:1fr;overflow:visible}
+ .rf-admin-reading-pane,.rf-admin-review-pane{overflow:visible}
+ .rf-admin-reading-pane{border-right:0;border-bottom:1px solid rgba(93,110,145,.1);padding:0 0 14px}
+ .rf-admin-review-toolbar,.rf-admin-pane-title{position:static;background:none}
+}
+@media(max-width:700px){
+ .rf-admin-review-modal{padding:14px}
+ .rf-admin-review-summary{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .rf-admin-review-toolbar{flex-direction:column}
+ .rf-admin-review-toolbar .rf4-actions{width:100%}
+ .rf-admin-review-toolbar .btn{flex:1}
+ .rf-admin-kv-grid,.rf-admin-score-grid{grid-template-columns:1fr}
+ .rf-admin-r2-total{grid-template-columns:auto 1fr}
+ .rf-admin-reading-pane .rf-final-work-body{font-size:16px;line-height:1.85;padding-left:2px;padding-right:2px}
+}
