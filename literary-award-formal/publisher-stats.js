@@ -108,7 +108,7 @@ function verifyCatalogLessons(r,candidates,publishers){
   const required=item.publishers||[];
   const publisherMatch=!required.length||required.some(p=>publishers.includes(p));
   const generic=lessonKey(item.canonical_title).length<=2;
-  if(generic&&!publisherMatch&&hit.field==='作品內文')continue;
+  if(generic&&!publisherMatch)continue;
   if(seen.has(item.canonical_title))continue;seen.add(item.canonical_title);
   verified.push({
    title:item.canonical_title,status:'verified',publisher_match:publisherMatch,
