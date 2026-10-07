@@ -1,17 +1,22 @@
 'use strict';
 (function(){
 const M={};
-const state={rows:[],submissions:[],search:'',group:'',publisher:'',filter:'all'};
+const ANALYSIS_VERSION=2;
+const state={rows:[],submissions:[],catalog:[],search:'',group:'',publisher:'',filter:'all'};
 const uniq=a=>[...new Set((a||[]).map(x=>String(x||'').trim()).filter(Boolean))];
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const splitList=s=>uniq(String(s||'').split(/[；;、,，\n]+/).map(x=>x.trim()));
 const genericSubjects=new Set(['國文','國文科','國語','國語科','國語文','自然','自然科學','生物','英文','生活','語文領域','生命教育','科普閱讀','國語課本','第二類','cc']);
 function normalizeLesson(v){
- let s=String(v||'').trim().replace(/[《》〈〉「」『』<>]/g,'').replace(/^[：:：\-–—_\s]+|[：:：\-–—_\s]+$/g,'');
+ let s=String(v||'').normalize('NFKC').trim().replace(/[《》〈〉「」『』<>]/g,'').replace(/^[：:：\-–—_\s]+|[：:：\-–—_\s]+$/g,'');
  s=s.replace(/^課文\s*/,'').replace(/^第[一二三四五六七八九十0-9]+課\s*/,'').trim();
  if(/再見[，,\s]*西沙/.test(s))s='再見，西莎';
  if(s==='再見西莎')s='再見，西莎';
+ if(s==='安南小熊回家')s='南安小熊回家';
  return s.slice(0,60);
+}
+function lessonKey(v){
+ return normalizeLesson(v).replace(/臺/g,'台').replace(/[\s、，,。．·:：;；_\-–—()（）【】]/g,'').toLowerCase();
 }
 function detectPublishers(raw){
  const t=String(raw||'').replace(/臺/g,'台').trim(),out=[];
@@ -35,7 +40,8 @@ function detectPublishers(raw){
 }
 function addEvidence(map,name,source,excerpt,score=1){
  name=normalizeLesson(name);if(!name||name.length<2||genericSubjects.has(name)||/^第?[一二三四五六七八九十0-9]+課$/.test(name))return;
- const bad=/^(?:我的|我們|動物|課文|文章|心得|閱讀|國文|國語|自然|英文|生活)$/;
+ if(/[。！？!?]/.test(name)||name.length>32)return;
+ const bad=/^(?:我的|我們|動物|課文|文章|心得|閱讀|國文|國語|自然|英文|生活|這篇課文|這篇課文後|這篇課文時|讓我明白|最讓我難忘|責任|內容|這裡)$/;
  if(bad.test(name))return;
  const cur=map.get(name)||{name,score:0,evidence:[]};cur.score+=score;
  if(cur.evidence.length<4)cur.evidence.push({source,excerpt:String(excerpt||'').trim().slice(0,180)});
@@ -47,37 +53,93 @@ function quoted(text,source,map,score=2){
  for(const re of regs)while((m=re.exec(s)))addEvidence(map,m[1],source,s.slice(Math.max(0,m.index-35),Math.min(s.length,re.lastIndex+35)),score);
 }
 function subjectCandidates(text,source,map){
- const s=String(text||'').trim();if(!s||genericSubjects.has(s))return;quoted(s,source,map,4);
+ const s=String(text||'').trim();if(!s||genericSubjects.has(s))return;quoted(s,source,map,5);
  let m;
- if((m=s.match(/[_－—-]\s*([^_－—-]{2,40})$/)))addEvidence(map,m[1],source,s,4);
- if((m=s.match(/第[一二三四五六七八九十0-9]+課\s*([^\s]{2,40})/)))addEvidence(map,m[1],source,s,5);
+ if((m=s.match(/[_－—-]\s*([^_－—-]{2,40})$/)))addEvidence(map,m[1],source,s,5);
+ if((m=s.match(/第[一二三四五六七八九十0-9]+課\s*([^\s]{2,40})/)))addEvidence(map,m[1],source,s,7);
  if((m=s.match(/[（(]([^）)]{2,40})[）)]/)))addEvidence(map,m[1],source,s,4);
- if((m=s.match(/(?:國文|國語|自然|英文|生物|生活)(?:科|課本|課文)?\s*[:：]?\s*([^\d\s][^\n]{1,35})$/))&&!genericSubjects.has(m[1].trim()))addEvidence(map,m[1],source,s,3);
- if(!genericSubjects.has(s)&&s.length>=2&&s.length<=18&&!/^(?:國[一二三四五六七八九十0-9]|[一二三四五六七八九十0-9]+[上下])/.test(s))addEvidence(map,s,source,s,1);
+ if((m=s.match(/(?:國文|國語|自然|英文|生物|生活)(?:科|課本|課文)?\s*[:：]?\s*([^\d\s][^\n]{1,35})$/))&&!genericSubjects.has(m[1].trim()))addEvidence(map,m[1],source,s,4);
 }
-function extractLessons(r){
+function extractCandidates(r){
  const map=new Map(),raw=String(r.publisher||'');
- quoted(raw,'出版社欄',map,5);
- let m=raw.match(/[）)]\s*([^\n]{2,45})$/);if(m&&/[翰林康軒南一龍騰三民東大]|學年度|第.+課/.test(raw.slice(0,m.index+1)))addEvidence(map,m[1],'出版社欄',raw,7);
+ quoted(raw,'出版社欄',map,7);
+ let m=raw.match(/[）)]\s*([^\n]{2,45})$/);
+ if(m&&/[翰林康軒南一龍騰三民東大]|學年度|第.+課/.test(raw.slice(0,m.index+1)))addEvidence(map,m[1],'出版社欄',raw,9);
  subjectCandidates(r.subject_1,'科目欄 1',map);subjectCandidates(r.subject_2,'科目欄 2',map);
  quoted(r.title,'作品標題',map,3);
  const title=String(r.title||'');
- if((m=title.match(/讀[《〈「]?([^》〉」]{2,25})[》〉」]?(?:有感|心得|閱讀心得)/)))addEvidence(map,m[1],'作品標題',title,4);
- if((m=title.match(/^(.{2,25})閱讀心得$/)))addEvidence(map,m[1],'作品標題',title,4);
- const body=String(r.body||'');quoted(body,'作品內文',map,1);
- const keyRegs=[/(?:課文|選文|文章|閱讀|讀到|讀了|讀完|一課)[「『《〈<]?([^」』》〉>，。；;\n]{2,35})/g];
- for(const re of keyRegs)while((m=re.exec(body)))addEvidence(map,m[1],'作品內文',body.slice(Math.max(0,m.index-35),Math.min(body.length,re.lastIndex+35)),3);
- const ranked=[...map.values()].sort((a,b)=>b.score-a.score||a.name.localeCompare(b.name,'zh-Hant'));
- const strong=ranked.filter(x=>x.score>=3).slice(0,8),chosen=strong.length?strong:ranked.slice(0,3);
- return{lesson_names:uniq(chosen.map(x=>x.name)),lesson_evidence:chosen.flatMap(x=>x.evidence.map(e=>({...e,name:x.name}))).slice(0,16)};
+ if((m=title.match(/讀[《〈「]?([^》〉」]{2,25})[》〉」]?(?:有感|心得|閱讀心得)/)))addEvidence(map,m[1],'作品標題',title,5);
+ if((m=title.match(/^(.{2,25})閱讀心得$/)))addEvidence(map,m[1],'作品標題',title,5);
+ const body=String(r.body||'');quoted(body,'作品內文',map,2);
+ const keyRegs=[/(?:課文|選文|讀到|讀了|讀完|讀過)[「『《〈<]?([^」』》〉>，。；;\n]{2,28})/g];
+ for(const re of keyRegs)while((m=re.exec(body)))addEvidence(map,m[1],'作品內文',body.slice(Math.max(0,m.index-28),Math.min(body.length,re.lastIndex+28)),3);
+ return [...map.values()].sort((a,b)=>b.score-a.score||a.name.localeCompare(b.name,'zh-Hant')).slice(0,12);
+}
+function catalogTerms(item){
+ return uniq([item.canonical_title,...(item.aliases||[])]).map(t=>({raw:t,key:lessonKey(t)})).filter(x=>x.key);
+}
+function escapeRegExp(v){return String(v).replace(/[.*+?^$()|[\]\\{}]/g,'\\$&')}
+function verifyCatalogLessons(r,candidates,publishers){
+ const fields=[
+  {name:'出版社欄',text:String(r.publisher||''),strong:true},
+  {name:'科目欄 1',text:String(r.subject_1||''),strong:true},
+  {name:'科目欄 2',text:String(r.subject_2||''),strong:true},
+  {name:'作品標題',text:String(r.title||''),strong:false},
+  {name:'作品內文',text:String(r.body||''),strong:false}
+ ];
+ const verified=[],seen=new Set();
+ for(const item of state.catalog){
+  const terms=catalogTerms(item);let hit=null;
+  for(const f of fields){
+   const fk=lessonKey(f.text);
+   for(const t of terms){
+    if(!t.key)continue;
+    const short=t.key.length<=2;let ok=fk.includes(t.key);
+    if(ok&&short&&!f.strong){
+      const rr=escapeRegExp(t.raw),raw=f.text;
+      ok=new RegExp('[〈《「『]\\s*'+rr+'\\s*[〉》」』]').test(raw)
+        ||new RegExp('(?:課文|第.{0,4}課|讀到|讀了|讀過).{0,8}'+rr).test(raw);
+    }
+    if(ok){hit={field:f.name,term:t.raw,excerpt:f.text.slice(0,220)};break}
+   }
+   if(hit)break;
+  }
+  if(!hit)continue;
+  const required=item.publishers||[];
+  const publisherMatch=!required.length||required.some(p=>publishers.includes(p));
+  const generic=lessonKey(item.canonical_title).length<=2;
+  if(generic&&!publisherMatch&&hit.field==='作品內文')continue;
+  if(seen.has(item.canonical_title))continue;seen.add(item.canonical_title);
+  verified.push({
+   title:item.canonical_title,status:'verified',publisher_match:publisherMatch,
+   source_label:item.source_label||'',source_url:item.source_url||'',
+   grade_semester:item.grade_semester||'',lesson_label:item.lesson_label||'',
+   matched_field:hit.field,matched_term:hit.term,excerpt:hit.excerpt
+  });
+ }
+ const matchedKeys=new Set();
+ for(const item of state.catalog){
+   if(!verified.some(v=>v.title===item.canonical_title))continue;
+   for(const t of catalogTerms(item))matchedKeys.add(t.key);
+ }
+ return{verified,candidates:candidates.filter(x=>!matchedKeys.has(lessonKey(x.name))).slice(0,6)};
 }
 function autoRecord(r){
- const pubs=detectPublishers(r.publisher),lessons=extractLessons(r);
- return{publishers:pubs,lesson_names:lessons.lesson_names,lesson_evidence:lessons.lesson_evidence};
+ const publishers=detectPublishers(r.publisher),rawCandidates=extractCandidates(r),v=verifyCatalogLessons(r,rawCandidates,publishers);
+ return{
+  publishers,
+  lesson_names:v.verified.map(x=>x.title),
+  lesson_evidence:v.verified.map(x=>({name:x.title,source:x.matched_field,excerpt:x.excerpt})),
+  lesson_candidates:v.candidates.map(x=>x.name),
+  lesson_verification:v.verified
+ };
 }
 function needsReview(x){
- const raw=String(x.publisher||'').trim();
- return !!raw&&(!x.publishers?.length||!x.lesson_names?.length);
+ return !!(x.lesson_candidates||[]).length&&!((x.lesson_names||[]).length);
+}
+async function loadCatalog(ctx){
+ const {data,error}=await ctx.sb.from('lesson_reference_catalog').select('*').eq('active',true).order('canonical_title');
+ if(error)throw error;state.catalog=data||[];
 }
 async function ensureRows(ctx,force=false){
  const {sb,S}=ctx;
@@ -88,9 +150,17 @@ async function ensureRows(ctx,force=false){
  const byId=new Map((reviews||[]).map(x=>[x.submission_id,x])),up=[];
  for(const r of subs||[]){
    const old=byId.get(r.id);
-   if(old&&(!force||old.review_status==='reviewed'))continue;
+   if(old?.review_status==='reviewed')continue;
+   if(old&&!force&&Number(old.analysis_version)===ANALYSIS_VERSION)continue;
    const a=autoRecord(r);
-   up.push({project_id:S.project.id,submission_id:r.id,publishers:a.publishers,lesson_names:a.lesson_names,lesson_evidence:a.lesson_evidence,included:old?.included??true,excluded_reason:old?.excluded_reason||null,review_status:'auto',notes:old?.notes||null,updated_by:S.user.id,updated_at:new Date().toISOString()});
+   up.push({
+    project_id:S.project.id,submission_id:r.id,publishers:a.publishers,
+    lesson_names:a.lesson_names,lesson_evidence:a.lesson_evidence,
+    lesson_candidates:a.lesson_candidates,lesson_verification:a.lesson_verification,
+    analysis_version:ANALYSIS_VERSION,
+    included:old?.included??true,excluded_reason:old?.excluded_reason||null,
+    review_status:'auto',notes:old?.notes||null,updated_by:S.user.id,updated_at:new Date().toISOString()
+   });
  }
  for(let i=0;i<up.length;i+=100){const {error:e}=await sb.from('publisher_reference_reviews').upsert(up.slice(i,i+100),{onConflict:'project_id,submission_id'});if(e)throw e}
  state.submissions=subs||[];
@@ -105,7 +175,7 @@ async function loadRows(ctx){
  if(se)throw se;if(re)throw re;
  const rm=new Map((reviews||[]).map(x=>[x.submission_id,x]));
  state.submissions=subs||[];
- state.rows=(subs||[]).map(s=>({...s,...(rm.get(s.id)||{publishers:[],lesson_names:[],lesson_evidence:[],included:true,review_status:'auto'})}));
+ state.rows=(subs||[]).map(s=>({...s,...(rm.get(s.id)||{publishers:[],lesson_names:[],lesson_evidence:[],lesson_candidates:[],lesson_verification:[],included:true,review_status:'auto',analysis_version:ANALYSIS_VERSION})}));
  return state.rows;
 }
 function summarize(rows){
