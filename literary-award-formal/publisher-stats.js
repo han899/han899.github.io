@@ -194,7 +194,7 @@ function summarize(rows){
 }
 function filteredRows(){
  let a=[...state.rows];
- if(state.search){const q=state.search.toLowerCase();a=a.filter(r=>[r.anonymous_code,r.title,r.publisher,r.subject_1,r.subject_2,...(r.publishers||[]),...(r.lesson_names||[])].some(v=>String(v||'').toLowerCase().includes(q)))}
+ if(state.search){const q=state.search.toLowerCase();a=a.filter(r=>[r.anonymous_code,r.title,r.publisher,r.subject_1,r.subject_2,...(r.publishers||[]),...(r.lesson_names||[]),...(r.lesson_candidates||[])].some(v=>String(v||'').toLowerCase().includes(q)))}
  if(state.group)a=a.filter(r=>r.group_name===state.group);
  if(state.publisher)a=a.filter(r=>(r.publishers||[]).includes(state.publisher));
  if(state.filter==='included')a=a.filter(r=>r.included);
@@ -203,30 +203,31 @@ function filteredRows(){
  return a;
 }
 function evidenceHtml(r){
- const e=Array.isArray(r.lesson_evidence)?r.lesson_evidence:[];
- if(!e.length)return '<span class="muted tiny">未找到明確課文線索</span>';
- return e.slice(0,3).map(x=>'<div class="publisher-evidence"><b>'+esc(x.name||'')+'</b><span>'+esc(x.source||'')+'</span><small>'+esc(x.excerpt||'')+'</small></div>').join('');
+ const e=Array.isArray(r.lesson_verification)?r.lesson_verification:[];
+ const verified=e.length?e.map(x=>'<div class="publisher-evidence verified"><b>'+esc(x.title||'')+'</b><span>已驗證｜'+esc(x.source_label||'資料來源')+'</span><small>'+esc((x.grade_semester||'')+(x.lesson_label?'｜'+x.lesson_label:'')+(x.matched_field?'｜命中 '+x.matched_field:''))+'</small>'+(x.source_url&&/^https:\/\//.test(x.source_url)?'<a href="'+esc(x.source_url)+'" target="_blank" rel="noopener">查看驗證來源</a>':'')+'</div>').join(''):'<span class="muted tiny">目前沒有通過教材資料交叉驗證的課文。</span>';
+ const cand=(r.lesson_candidates||[]).length?'<div class="publisher-candidate-box"><b>未驗證候選（不列入統計）</b><div>'+r.lesson_candidates.map(x=>'<span class="badge warn">'+esc(x)+'</span>').join(' ')+'</div></div>':'';
+ return verified+cand;
 }
 function publisherOptions(rows){
  return uniq(rows.flatMap(r=>r.publishers||[])).sort((a,b)=>a.localeCompare(b,'zh-Hant'));
 }
 function renderPage(ctx){
  const {shell}=ctx,rows=state.rows,summary=summarize(rows),shown=filteredRows(),pubOpts=publisherOptions(rows);
- const withPub=rows.filter(r=>String(r.publisher||'').trim()).length,included=rows.filter(r=>r.included).length,review=rows.filter(needsReview).length;
+ const withPub=rows.filter(r=>String(r.publisher||'').trim()).length,included=rows.filter(r=>r.included).length,review=rows.filter(needsReview).length,verifiedRows=rows.filter(r=>(r.lesson_names||[]).length).length,candidateRows=rows.filter(r=>(r.lesson_candidates||[]).length).length;
  const summaryRows=summary.pubs.map(x=>'<tr><td><b>'+esc(x.publisher)+'</b></td><td>'+x.total+'</td><td><b>'+x.included+'</b></td><td>'+x.excluded+'</td><td>'+x.lessons.size+'</td><td class="publisher-lessons">'+esc([...x.lessons].join('、')||'—')+'</td></tr>').join('');
  const cards=shown.map(r=>{
    const pub=(r.publishers||[]).map(x=>'<span class="badge">'+esc(x)+'</span>').join(' ')||'<span class="badge warn">未辨識</span>';
-   const lessons=(r.lesson_names||[]).map(x=>'<span class="badge purple">'+esc(x)+'</span>').join(' ')||'<span class="muted">尚未辨識</span>';
-   const warning=needsReview(r)?'<span class="badge warn">待確認</span>':r.review_status==='reviewed'?'<span class="badge good">已人工確認</span>':'<span class="badge">自動辨識</span>';
+   const lessons=(r.lesson_names||[]).map(x=>'<span class="badge good">✓ '+esc(x)+'</span>').join(' ')||'<span class="muted">沒有已驗證課文</span>'; const candidates=(r.lesson_candidates||[]).map(x=>'<span class="badge warn">'+esc(x)+'</span>').join(' ')||'<span class="muted">無</span>';
+   const warning=r.review_status==='reviewed'?'<span class="badge good">人工確認</span>':(r.lesson_names||[]).length?'<span class="badge good">已交叉驗證</span>':needsReview(r)?'<span class="badge warn">有候選未驗證</span>':'<span class="badge">未找到課文</span>';
    return '<article class="publisher-review-card '+(r.included?'':'is-excluded')+'" data-pub-row="'+esc(r.id)+'"><div class="publisher-card-head"><div><div class="row">'+warning+' '+(r.included?'<span class="badge good">納入統計</span>':'<span class="badge bad">已排除</span>')+'</div><h4>'+esc(r.anonymous_code||'')+'｜'+esc(r.title||'（無作品名稱）')+'</h4><div class="muted tiny">'+esc(r.group_name||'')+'｜'+esc(r.category||'')+(r.status&&r.status!=='formal'?'｜作品狀態：'+esc(r.status):'')+'</div></div><div class="rf4-actions"><button class="btn" data-pub-edit="'+esc(r.id)+'">編輯辨識</button><button class="btn '+(r.included?'danger':'primary')+'" data-pub-toggle="'+esc(r.id)+'">'+(r.included?'排除不記錄':'恢復納入')+'</button></div></div>'+
-   '<div class="publisher-review-grid"><div><label>原始出版社填答</label><div class="publisher-raw">'+esc(r.publisher||'—')+'</div></div><div><label>統一後出版社</label><div>'+pub+'</div></div><div><label>辨識課文名稱</label><div>'+lessons+'</div></div><div><label>科目欄</label><div>'+esc([r.subject_1,r.subject_2].filter(Boolean).join('｜')||'—')+'</div></div></div>'+
+   '<div class="publisher-review-grid"><div><label>原始出版社填答</label><div class="publisher-raw">'+esc(r.publisher||'—')+'</div></div><div><label>統一後出版社</label><div>'+pub+'</div></div><div><label>已驗證課文（正式統計）</label><div>'+lessons+'</div></div><div><label>未驗證候選（不計數）</label><div>'+candidates+'</div></div><div><label>科目欄</label><div>'+esc([r.subject_1,r.subject_2].filter(Boolean).join('｜')||'—')+'</div></div></div>'+
    '<details class="publisher-evidence-wrap"><summary>查看辨識依據與作品內容</summary>'+evidenceHtml(r)+'<div class="publisher-body">'+esc(r.body||'')+'</div></details>'+
    (!r.included&&r.excluded_reason?'<div class="danger-note tiny">排除原因：'+esc(r.excluded_reason)+'</div>':'')+'</article>';
  }).join('');
- shell('<section class="section"><div class="row" style="justify-content:space-between;align-items:flex-start;gap:14px"><div><div class="badge purple">管理員統計工具</div><h2>出版社／引用課文統計</h2><p class="muted">自動合併出版社簡稱／全稱，並從出版社欄、科目欄、作品標題與內文辨識引用課文。此頁的排除只影響統計，不會變更投稿、評審或得獎狀態。</p></div><div class="rf4-actions"><button class="btn" id="pubReanalyze">重新分析未人工確認</button><button class="btn primary" id="pubExport">下載統計 Excel</button></div></div>'+
- '<div class="publisher-kpis"><div><b>'+rows.length+'</b><span>投稿筆數</span></div><div><b>'+withPub+'</b><span>有填出版社</span></div><div><b>'+included+'</b><span>目前納入統計</span></div><div><b>'+review+'</b><span>待人工確認</span></div></div></section>'+
- '<section class="section"><h3>出版社統計</h3><p class="muted tiny">「辨識筆數」含目前排除項目；「納入引用篇數」才是正式統計數。若一篇同時提到多家出版社，每家各計 1 篇。</p>'+(summary.pubs.length?'<div class="table-wrap"><table><thead><tr><th>出版社</th><th>辨識筆數</th><th>納入引用篇數</th><th>排除篇數</th><th>課文種類</th><th>辨識到的課文</th></tr></thead><tbody>'+summaryRows+'</tbody></table></div>':'<div class="empty">目前尚未辨識到出版社。</div>')+'</section>'+
- '<section class="section"><div class="publisher-filterbar"><input class="input" id="pubSearch" placeholder="搜尋編號、作品、出版社、課文…" value="'+esc(state.search)+'"><select class="select" id="pubGroup"><option value="">全部組別</option>'+['小學組','國中組','高中職組'].map(g=>'<option '+(state.group===g?'selected':'')+'>'+g+'</option>').join('')+'</select><select class="select" id="pubPublisher"><option value="">全部出版社</option>'+pubOpts.map(p=>'<option '+(state.publisher===p?'selected':'')+'>'+esc(p)+'</option>').join('')+'</select><select class="select" id="pubFilter"><option value="all" '+(state.filter==='all'?'selected':'')+'>全部項目</option><option value="included" '+(state.filter==='included'?'selected':'')+'>只看納入</option><option value="excluded" '+(state.filter==='excluded'?'selected':'')+'>只看排除</option><option value="review" '+(state.filter==='review'?'selected':'')+'>只看待確認</option></select></div><div class="row" style="justify-content:space-between"><h3>逐篇檢核</h3><span class="muted">顯示 '+shown.length+' / '+rows.length+' 篇</span></div><div class="publisher-review-list">'+(cards||'<div class="empty">目前篩選條件沒有資料。</div>')+'</div></section>');
+ shell('<section class="section"><div class="row" style="justify-content:space-between;align-items:flex-start;gap:14px"><div><div class="badge purple">管理員統計工具</div><h2>出版社／引用課文統計</h2><p class="muted">出版社名稱仍會自動整併；課文改採「候選 → 教材目錄／教育平台／出版社資料交叉驗證」後才納入正式統計。未驗證字串只保留為候選，不會計入課文篇數。此頁的排除仍只影響統計。</p></div><div class="rf4-actions"><button class="btn" id="pubReanalyze">重新分析未人工確認</button><button class="btn primary" id="pubExport">下載統計 Excel</button></div></div>'+
+ '<div class="publisher-kpis"><div><b>'+rows.length+'</b><span>投稿筆數</span></div><div><b>'+withPub+'</b><span>有填出版社</span></div><div><b>'+verifiedRows+'</b><span>有已驗證課文</span></div><div><b>'+candidateRows+'</b><span>有未驗證候選</span></div></div><div class="rf4-banner good"><b>正式課文統計採保守模式</b><br>只有能對上教材驗證資料庫的課文才會列入；候選即使看起來像篇名，也不會直接計數。目前已收錄 '+state.catalog.length+' 篇驗證教材。</div></section>'+
+ '<section class="section"><h3>出版社統計</h3><p class="muted tiny">「納入引用篇數」以作品是否引用該出版社計算；右側課文只顯示已交叉驗證的正式課文。若一篇同時提到多家出版社，每家各計 1 篇。</p>'+(summary.pubs.length?'<div class="table-wrap"><table><thead><tr><th>出版社</th><th>辨識筆數</th><th>納入引用篇數</th><th>排除篇數</th><th>課文種類</th><th>辨識到的課文</th></tr></thead><tbody>'+summaryRows+'</tbody></table></div>':'<div class="empty">目前尚未辨識到出版社。</div>')+'</section>'+
+ '<section class="section"><div class="publisher-filterbar"><input class="input" id="pubSearch" placeholder="搜尋編號、作品、出版社、課文…" value="'+esc(state.search)+'"><select class="select" id="pubGroup"><option value="">全部組別</option>'+['小學組','國中組','高中職組'].map(g=>'<option '+(state.group===g?'selected':'')+'>'+g+'</option>').join('')+'</select><select class="select" id="pubPublisher"><option value="">全部出版社</option>'+pubOpts.map(p=>'<option '+(state.publisher===p?'selected':'')+'>'+esc(p)+'</option>').join('')+'</select><select class="select" id="pubFilter"><option value="all" '+(state.filter==='all'?'selected':'')+'>全部項目</option><option value="included" '+(state.filter==='included'?'selected':'')+'>只看納入</option><option value="excluded" '+(state.filter==='excluded'?'selected':'')+'>只看排除</option><option value="review" '+(state.filter==='review'?'selected':'')+'>只看有未驗證候選</option></select></div><div class="row" style="justify-content:space-between"><h3>逐篇檢核</h3><span class="muted">顯示 '+shown.length+' / '+rows.length+' 篇</span></div><div class="publisher-review-list">'+(cards||'<div class="empty">目前篩選條件沒有資料。</div>')+'</div></section>');
  bind(ctx);
 }
 function openEditor(ctx,r){
@@ -235,11 +236,11 @@ function openEditor(ctx,r){
  document.body.appendChild(d);d.addEventListener('close',()=>d.remove());d.showModal();
  d.querySelector('#pubEditSave').onclick=async()=>{
    const publishers=splitList(d.querySelector('#pubEditPublishers').value),lesson_names=splitList(d.querySelector('#pubEditLessons').value),notes=d.querySelector('#pubEditNotes').value.trim();
-   const {error}=await ctx.sb.from('publisher_reference_reviews').update({publishers,lesson_names,notes:notes||null,review_status:'reviewed',updated_by:ctx.S.user.id,updated_at:new Date().toISOString()}).eq('project_id',ctx.S.project.id).eq('submission_id',r.id);
+   const {error}=await ctx.sb.from('publisher_reference_reviews').update({publishers,lesson_names,lesson_candidates:[],lesson_verification:lesson_names.map(title=>({title,status:'manual',source_label:'管理員人工確認'})),notes:notes||null,review_status:'reviewed',analysis_version:ANALYSIS_VERSION,updated_by:ctx.S.user.id,updated_at:new Date().toISOString()}).eq('project_id',ctx.S.project.id).eq('submission_id',r.id);
    if(error)return ctx.toast(error.message);await ctx.audit('人工修正出版社／課文辨識','publisher_reference_review',r.id,{publishers,lesson_names});d.close();await loadRows(ctx);renderPage(ctx);
  };
  d.querySelector('#pubEditAuto').onclick=async()=>{
-   const a=autoRecord(r),{error}=await ctx.sb.from('publisher_reference_reviews').update({publishers:a.publishers,lesson_names:a.lesson_names,lesson_evidence:a.lesson_evidence,review_status:'auto',notes:null,updated_by:ctx.S.user.id,updated_at:new Date().toISOString()}).eq('project_id',ctx.S.project.id).eq('submission_id',r.id);
+   const a=autoRecord(r),{error}=await ctx.sb.from('publisher_reference_reviews').update({publishers:a.publishers,lesson_names:a.lesson_names,lesson_evidence:a.lesson_evidence,lesson_candidates:a.lesson_candidates,lesson_verification:a.lesson_verification,review_status:'auto',analysis_version:ANALYSIS_VERSION,notes:null,updated_by:ctx.S.user.id,updated_at:new Date().toISOString()}).eq('project_id',ctx.S.project.id).eq('submission_id',r.id);
    if(error)return ctx.toast(error.message);d.close();await loadRows(ctx);renderPage(ctx);
  };
 }
@@ -250,7 +251,7 @@ async function exportExcel(ctx){
    const wb=XLSX.utils.book_new(),append=(name,list)=>{const ws=XLSX.utils.json_to_sheet(list);ws['!autofilter']={ref:ws['!ref']||'A1:A1'};ws['!cols']=Object.keys(list[0]||{}).map(k=>({wch:/作品內容|辨識依據|引用課文/.test(k)?55:Math.min(Math.max(k.length+5,12),28)}));XLSX.utils.book_append_sheet(wb,ws,name)};
    append('出版社統計',summary.pubs.map(x=>({'出版社':x.publisher,'辨識筆數':x.total,'納入引用篇數':x.included,'排除篇數':x.excluded,'引用課文種類數':x.lessons.size,'引用課文':[...x.lessons].join('、')})));
    append('課文引用統計',summary.lessons.map(x=>({'出版社':x.publisher,'課文名稱':x.lesson,'納入引用篇數':x.count})));
-   append('逐篇檢核',state.rows.map(r=>({'納入統計':r.included?'是':'否','排除原因':r.excluded_reason||'','組別':r.group_name||'','匿名編號':r.anonymous_code||'','作品名稱':r.title||'','原始出版社填答':r.publisher||'','統一後出版社':(r.publishers||[]).join('；'),'辨識課文名稱':(r.lesson_names||[]).join('；'),'辨識狀態':needsReview(r)?'待確認':r.review_status==='reviewed'?'人工確認':'自動辨識','科目欄1':r.subject_1||'','科目欄2':r.subject_2||'','備註':r.notes||'','作品內容':r.body||''})));
+   append('逐篇檢核',state.rows.map(r=>({'納入統計':r.included?'是':'否','排除原因':r.excluded_reason||'','組別':r.group_name||'','匿名編號':r.anonymous_code||'','作品名稱':r.title||'','原始出版社填答':r.publisher||'','統一後出版社':(r.publishers||[]).join('；'),'已驗證課文名稱':(r.lesson_names||[]).join('；'),'未驗證候選':(r.lesson_candidates||[]).join('；'),'辨識狀態':r.review_status==='reviewed'?'人工確認':(r.lesson_names||[]).length?'已交叉驗證':needsReview(r)?'有候選未驗證':'未找到課文','科目欄1':r.subject_1||'','科目欄2':r.subject_2||'','備註':r.notes||'','作品內容':r.body||''})));
    const d=new Date(),p=n=>String(n).padStart(2,'0'),file=(ctx.S.project.name||'競賽')+'_出版社與引用課文統計_'+d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+'.xlsx';
    XLSX.writeFile(wb,file);ctx.toast('出版社與引用課文統計已下載');await ctx.audit('下載出版社與引用課文統計','publisher_reference_export','',{rows:state.rows.length});
  }catch(e){ctx.toast(e.message||String(e))}
@@ -268,7 +269,7 @@ function bind(ctx){
 M.render=async function(ctx){
  if(!['platform_admin','project_admin'].includes(ctx.S.role))return ctx.shell('<section class="section"><div class="danger-note">僅限平台／專案管理員使用出版社與引用課文統計。</div></section>');
  ctx.shell('<section class="section"><div class="empty">正在整理出版社名稱並掃描引用課文…</div></section>');
- try{await ensureRows(ctx,false);await loadRows(ctx);renderPage(ctx)}catch(e){ctx.shell('<section class="section"><div class="danger-note"><b>出版社／課文統計載入失敗</b><br>'+esc(e.message||String(e))+'</div></section>')}
+ try{await loadCatalog(ctx);await ensureRows(ctx,false);await loadRows(ctx);renderPage(ctx)}catch(e){ctx.shell('<section class="section"><div class="danger-note"><b>出版社／課文統計載入失敗</b><br>'+esc(e.message||String(e))+'</div></section>')}
 };
 window.PublisherStats=M;
 })();
