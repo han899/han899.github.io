@@ -186,7 +186,7 @@ async function exportExcel(ctx){
  }catch(e){ctx.toast(e.message||String(e))}
 }
 function bind(ctx){
- let timer;const search=document.getElementById('pubSearch');if(search)search.oninput=()=>{clearTimeout(timer);timer=setTimeout(()=>{state.search=search.value;renderPage(ctx)},180)};
+ let timer;const search=document.getElementById('pubSearch');if(search)search.oninput=()=>{clearTimeout(timer);const value=search.value;timer=setTimeout(()=>{state.search=value;renderPage(ctx);const next=document.getElementById('pubSearch');if(next){next.focus();next.setSelectionRange(next.value.length,next.value.length)}},180)};
  const group=document.getElementById('pubGroup');if(group)group.onchange=()=>{state.group=group.value;renderPage(ctx)};
  const pub=document.getElementById('pubPublisher');if(pub)pub.onchange=()=>{state.publisher=pub.value;renderPage(ctx)};
  const filter=document.getElementById('pubFilter');if(filter)filter.onchange=()=>{state.filter=filter.value;renderPage(ctx)};
